@@ -18,6 +18,7 @@ const NAV = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { id: "customers", label: "Customers", icon: Users, path: "/customers" },
   { id: "orders", label: "Orders", icon: ShoppingBag, path: "/orders" },
+  { id: "business-profile", label: "Business Profile", icon: ShoppingBag, path: "/business-profile" },
   { id: "broadcast", label: "Broadcast", icon: Radio, path: "/broadcast" },
   { id: "invoices", label: "Invoices", icon: Receipt, path: "/invoices" },
   { id: "quick-replies", label: "Quick Replies", icon: MessageSquare, path: "/quick-replies" },

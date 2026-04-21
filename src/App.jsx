@@ -21,6 +21,8 @@ import Settings from "./pages/Settings";
 import OnboardingModal from "./components/ui/OnboardingModal";
 import "./index.css";
 import Invoices from "./pages/Invoices";
+import BusinessProfile from "./pages/BusinessProfile";
+import PublicProfile from "./pages/PublicProfile";
 // Protected Route Component
 function ProtectedRoute({ children }) {
   const { user } = useStore();
@@ -133,6 +135,9 @@ export default function App() {
       {/* Landing Page as entry point */}
       <Route path="/" element={<LandingPage />} />
 
+      {/* Public Business Profile - No Auth Required */}
+      <Route path="/biz/:username" element={<PublicProfile store={store} />} />
+
       {/* Auth Routes */}
       <Route
         path="/login"
@@ -198,6 +203,17 @@ export default function App() {
           <ProtectedRoute>
             <AppLayout>
               <Orders store={store} />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/business-profile"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <BusinessProfile store={store} />
             </AppLayout>
           </ProtectedRoute>
         }

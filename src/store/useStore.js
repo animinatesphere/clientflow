@@ -41,6 +41,7 @@ export function useStore() {
     load("cf_broadcasts", SEED_BROADCASTS),
   );
   const [invoices, setInvoices] = useState(() => load("cf_invoices", []));
+  const [businessProfile, setBusinessProfile] = useState(() => load("cf_business_profile", null));
   const [toasts, setToasts] = useState([]);
 
   /* ── Persist on change ── */
@@ -62,6 +63,9 @@ export function useStore() {
   useEffect(() => {
     save("cf_invoices", invoices);
   }, [invoices]);
+  useEffect(() => {
+    save("cf_business_profile", businessProfile);
+  }, [businessProfile]);
 
   /* ── Load from Supabase on session start or user change ── */
   useEffect(() => {
@@ -154,6 +158,30 @@ export function useStore() {
               createdAt: i.created_at,
             })),
           );
+        const { data: profileData } = await supabase
+          .from("business_profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        if (profileData) {
+          setBusinessProfile({
+            id: profileData.id,
+            businessName: profileData.business_name,
+            username: profileData.username,
+            tagline: profileData.tagline,
+            about: profileData.about,
+            whatsapp: profileData.whatsapp,
+            instagram: profileData.instagram,
+            twitter: profileData.twitter,
+            location: profileData.location,
+            avatarUrl: profileData.avatar_url,
+            accentColor: profileData.accent_color,
+            services: profileData.services || [],
+            isPublished: profileData.is_published,
+            views: profileData.views || 0,
+            updatedAt: profileData.updated_at,
+          });
+        }
       } catch (e) {
         console.warn("Supabase load failed", e);
       }
@@ -942,6 +970,89 @@ export function useStore() {
     [],
   );
 
+  /* ── Business Profile Actions ── */
+  const saveBusinessProfile = useCallback(async (data) => {
+    if (!user?.id) return;
+    const updatedAt = new Date().toISOString();
+    const payload = {
+      id: user.id,
+      business_name: data.businessName,
+      username: data.username,
+      tagline: data.tagline,
+      about: data.about,
+      whatsapp: data.whatsapp,
+      instagram: data.instagram,
+      twitter: data.twitter,
+      location: data.location,
+      avatar_url: data.avatarUrl,
+      accent_color: data.accentColor,
+      services: data.services,
+      is_published: data.isPublished,
+      updated_at: updatedAt,
+    };
+
+    setBusinessProfile({ ...data, id: user.id, updatedAt });
+    toast("Business Profile Secured ✅", "success");
+
+    try {
+      const { error } = await supabase
+        .from("business_profiles")
+        .upsert([payload]);
+      if (error) toast("Cloud Sync Refused", "error");
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [user?.id, toast]);
+
+  const fetchProfileByUsername = useCallback(async (username) => {
+    try {
+      const { data, error } = await supabase
+        .from("business_profiles")
+        .select("*")
+        .eq("username", username)
+        .eq("is_published", true)
+        .single();
+      
+      if (error || !data) return null;
+      return {
+        id: data.id,
+        businessName: data.business_name,
+        username: data.username,
+        tagline: data.tagline,
+        about: data.about,
+        whatsapp: data.whatsapp,
+        instagram: data.instagram,
+        twitter: data.twitter,
+        location: data.location,
+        avatarUrl: data.avatar_url,
+        accentColor: data.accent_color,
+        services: data.services || [],
+        isPublished: data.is_published,
+        views: data.views || 0,
+      };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const incrementProfileView = useCallback(async (profileId) => {
+    try {
+      // Direct RPC or raw increment if supported, otherwise fetch-and-update
+      const { data: current } = await supabase
+        .from("business_profiles")
+        .select("views")
+        .eq("id", profileId)
+        .single();
+      
+      await supabase
+        .from("business_profiles")
+        .update({ views: (current?.views || 0) + 1 })
+        .eq("id", profileId);
+    } catch (e) {
+      console.warn("View increment failed", e);
+    }
+  }, []);
+
   return {
     user,
     customers,
@@ -976,5 +1087,9 @@ export function useStore() {
     plan,
     limits,
     canAdd,
+    businessProfile,
+    saveBusinessProfile,
+    fetchProfileByUsername,
+    incrementProfileView,
   };
 }

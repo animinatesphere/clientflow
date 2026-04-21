@@ -1,166 +1,89 @@
-import { X, CheckCircle, Zap } from "lucide-react";
+import { X, CheckCircle2, Zap, ShieldCheck } from "lucide-react";
 
 const FEATURES = [
-  "Unlimited customers",
-  "Unlimited orders & invoices",
-  "Unlimited quick replies",
-  "Broadcast to all customers",
-  "Sales analytics & reports",
-  "Export to Excel/CSV",
-  "Priority support",
+  "Unlimited client relationships",
+  "Unlimited transaction ledgers",
+  "Unlimited communication templates",
+  "Mass Distribution (Broadcast)",
+  "Real-time Revenue Intel",
+  "Enterprise Data Export",
+  "Elite Account Support",
 ];
 
 export default function UpgradeModal({ onClose, reason }) {
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
-        background: "rgba(0,0,0,0.7)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-bg-primary/90 backdrop-blur-md animate-in fade-in transition-all duration-500"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="card lp-anim-in"
-        style={{
-          width: "100%",
-          maxWidth: 440,
-          padding: 32,
-          borderRadius: 24,
-          boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
-          position: "relative",
-        }}
+        className="card max-w-[480px] w-full p-8 md:p-12 border-primary/20 bg-gradient-to-br from-primary/10 via-bg-card to-bg-card shadow-[0_0_100px_-20px_rgba(37,211,102,0.2)] relative overflow-hidden animate-in slide-in-from-bottom-8 duration-700"
       >
+        {/* Glow Element */}
+        <div className="absolute top-[-50px] left-[-50px] w-40 h-40 bg-primary/20 rounded-full blur-[80px]" />
+
         {/* Close */}
         <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--text-muted)",
-          }}
+          className="absolute top-6 right-6 w-10 h-10 rounded-xl flex items-center justify-center text-text-muted hover:bg-white/5 hover:text-white transition-all"
         >
-          <X size={18} />
+          <X size={20} />
         </button>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: "rgba(37,211,102,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 16px",
-            }}
-          >
-            <Zap size={28} color="var(--green)" />
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-black shadow-[0_0_30px_rgba(37,211,102,0.4)] mx-auto mb-6 transform hover:rotate-12 transition-transform">
+            <Zap size={32} fill="currentColor" />
           </div>
-          <h2 style={{ fontSize: "1.3rem", fontWeight: 800, marginBottom: 8 }}>
-            Upgrade to Pro
-          </h2>
+          <h2 className="text-3xl font-black text-white tracking-tighter mb-3">Upgrade to Elite</h2>
           {reason && (
-            <p
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--text-secondary)",
-                background: "rgba(245,158,11,0.1)",
-                border: "1px solid rgba(245,158,11,0.2)",
-                borderRadius: 8,
-                padding: "8px 14px",
-              }}
-            >
+            <div className="mx-auto max-w-xs p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[0.7rem] font-bold uppercase tracking-widest leading-relaxed">
               {reason}
-            </p>
+            </div>
           )}
         </div>
 
-        {/* Price */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: 24,
-            padding: "16px 0",
-            borderTop: "1px solid var(--border)",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "2.2rem",
-              fontWeight: 800,
-              color: "var(--green)",
-            }}
-          >
-            ₦1,500
+        {/* Pricing Architecture */}
+        <div className="text-center mb-10 py-8 border-y border-white/5 bg-white/[0.01]">
+          <div className="text-[0.65rem] font-black text-text-muted uppercase tracking-[0.3em] mb-2">Total Monthly Investment</div>
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-5xl font-black text-white tracking-tighter">₦1,500</span>
+            <span className="text-text-muted font-bold">/mo</span>
           </div>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-            per month · cancel anytime
-          </div>
+          <p className="text-[0.7rem] font-bold text-text-muted mt-3 italic underline decoration-primary/30 underline-offset-4 pointer-events-none opacity-60">Cancel your subscription at any phase.</p>
         </div>
 
-        {/* Features */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-            marginBottom: 24,
-          }}
-        >
+        {/* Feature Matrix */}
+        <div className="space-y-4 mb-10">
           {FEATURES.map((f) => (
-            <div
-              key={f}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: "0.875rem",
-              }}
-            >
-              <CheckCircle size={16} color="var(--green)" />
-              <span style={{ color: "var(--text-secondary)" }}>{f}</span>
+            <div key={f} className="flex items-center gap-3 text-sm font-medium text-text-secondary group">
+              <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-125 transition-transform">
+                <CheckCircle2 size={14} />
+              </div>
+              <span className="group-hover:text-white transition-colors">{f}</span>
             </div>
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Action Engine */}
         <button
-          className="lp-cta-btn"
-          style={{ width: "100%", justifyContent: "center" }}
+          className="btn btn-primary w-full h-16 text-lg shadow-2xl relative overflow-hidden group mb-6"
           onClick={() => {
-            // Paystack will go here later
-            alert(
-              "Paystack integration coming soon! For now contact us on WhatsApp to upgrade.",
-            );
+            window.open("https://paystack.shop/pay/01et7r1cnq", "_blank");
             onClose();
           }}
         >
-          <Zap size={18} /> Upgrade Now — ₦1,500/mo
+          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
+          <Zap size={20} className="animate-pulse" />
+          <span className="font-black uppercase tracking-widest">Authorize Upgrade</span>
           <div className="lp-cta-shine" />
         </button>
 
-        <p
-          style={{
-            textAlign: "center",
-            fontSize: "0.72rem",
-            color: "var(--text-muted)",
-            marginTop: 12,
-          }}
-        >
-          🔒 Secure payment · Nigerian business · Cancel anytime
-        </p>
+        <div className="flex items-center justify-center gap-4 text-[0.6rem] font-black text-text-muted uppercase tracking-widest opacity-60">
+           <div className="flex items-center gap-1.5"><ShieldCheck size={12} /> Priority Security</div>
+           <div className="w-1 h-1 rounded-full bg-text-muted" />
+           <div className="flex items-center gap-1.5">Verified Network</div>
+        </div>
       </div>
     </div>
   );

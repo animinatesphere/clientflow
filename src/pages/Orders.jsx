@@ -1,14 +1,29 @@
 import { useState } from 'react';
-import { Plus, Trash2, Pencil, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, Pencil, MessageCircle, GripVertical, ShoppingBag, ArrowUpRight, Clock, CheckCircle2 } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 
 const STATUSES = ['Pending', 'Paid', 'Delivered'];
 
-const COL_COLORS = {
-  Pending:   { accent: 'var(--amber)', bg: 'rgba(245,158,11,0.08)', dot: '🟠' },
-  Paid:      { accent: 'var(--blue)',  bg: 'rgba(59,130,246,0.08)', dot: '🔵' },
-  Delivered: { accent: 'var(--green)', bg: 'rgba(37,211,102,0.08)', dot: '🟢' },
+const COL_CONFIG = {
+  Pending: { 
+    accent: '#f59e0b', 
+    bg: 'rgba(245,158,11,0.03)', 
+    border: 'rgba(245,158,11,0.1)',
+    icon: Clock
+  },
+  Paid: { 
+    accent: '#3b82f6', 
+    bg: 'rgba(59,130,246,0.03)', 
+    border: 'rgba(59,130,246,0.1)',
+    icon: ArrowUpRight
+  },
+  Delivered: { 
+    accent: '#25D366', 
+    bg: 'rgba(37,211,102,0.03)', 
+    border: 'rgba(37,211,102,0.1)',
+    icon: CheckCircle2
+  },
 };
 
 function OrderForm({ initial = {}, customers, onSave, onCancel }) {
@@ -27,35 +42,37 @@ function OrderForm({ initial = {}, customers, onSave, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label className="form-label">Customer *</label>
-        <select className="form-select" value={form.customerId} onChange={e => set('customerId', e.target.value)} required>
-          {customers.length === 0
-            ? <option value="">No customers yet — add one first</option>
-            : customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>)
-          }
-        </select>
-      </div>
-      <div className="form-group">
-        <label className="form-label">Item / Service *</label>
-        <input className="form-input" placeholder="e.g. Logo Design, 5 Flyers" value={form.item} onChange={e => set('item', e.target.value)} required />
-      </div>
-      <div className="grid-2">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
         <div className="form-group">
-          <label className="form-label">Amount (₦) *</label>
-          <input className="form-input" type="number" placeholder="0" min="0" value={form.amount} onChange={e => set('amount', e.target.value)} required />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Status</label>
-          <select className="form-select" value={form.status} onChange={e => set('status', e.target.value)}>
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Client Source *</label>
+          <select className="form-select" value={form.customerId} onChange={e => set('customerId', e.target.value)} required>
+            {customers.length === 0
+              ? <option value="">No clients found — onboard one first</option>
+              : customers.map(c => <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>)
+            }
           </select>
         </div>
+        <div className="form-group">
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Project / Service Description *</label>
+          <input className="form-input" placeholder="e.g. Graphic Design Masterclass" value={form.item} onChange={e => set('item', e.target.value)} required />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Valuation (₦) *</label>
+            <input className="form-input" type="number" placeholder="0" min="0" value={form.amount} onChange={e => set('amount', e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">System Phase</label>
+            <select className="form-select" value={form.status} onChange={e => set('status', e.target.value)}>
+              {STATUSES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
-      <div className="modal-footer">
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn btn-primary">Save Order</button>
+      <div className="flex gap-3 pt-4">
+        <button type="button" className="btn btn-secondary flex-1" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn btn-primary flex-1">Initialize Order</button>
       </div>
     </form>
   );
@@ -63,46 +80,55 @@ function OrderForm({ initial = {}, customers, onSave, onCancel }) {
 
 function KanbanCard({ order, customer, formatNaira, waLink, onEdit, onDelete, onStatusChange }) {
   return (
-    <div className="kanban-card">
-      <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: 6 }}>
-        {order.item}
+    <div className="group relative bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300">
+      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+         <div className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-white/10 hover:text-white cursor-pointer transition-colors" onClick={() => onEdit(order)}>
+           <Pencil size={14} />
+         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <div className="avatar" style={{ width: 24, height: 24, fontSize: '0.6rem' }}>
-          {customer?.name?.charAt(0) || '?'}
+      
+      <div className="flex gap-4">
+        <div className="pt-1.5 text-text-muted/40 cursor-grab active:cursor-grabbing">
+          <GripVertical size={16} />
         </div>
-        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{customer?.name || 'Unknown'}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-          {formatNaira(order.amount)}
-        </span>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-          {new Date(order.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
-        </span>
-      </div>
-      {/* Status change */}
-      <select
-        className="form-select"
-        value={order.status}
-        onChange={e => onStatusChange(order.id, { status: e.target.value })}
-        style={{ fontSize: '0.75rem', padding: '5px 10px', marginBottom: 10 }}
-      >
-        {STATUSES.map(s => <option key={s}>{s}</option>)}
-      </select>
-      {/* Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {customer && (
-          <a href={waLink(customer.phone)} target="_blank" rel="noopener noreferrer" className="wa-btn" style={{ flex: 1, justifyContent: 'center' }}>
-            <MessageCircle size={12} /> Chat
-          </a>
-        )}
-        <button className="btn btn-ghost btn-icon btn-sm" title="Edit" onClick={() => onEdit(order)}>
-          <Pencil size={13} />
-        </button>
-        <button className="btn btn-ghost btn-icon btn-sm" title="Delete" style={{ color: 'var(--red)' }} onClick={() => onDelete(order)}>
-          <Trash2 size={13} />
-        </button>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-black text-white mb-4 pr-6 leading-relaxed truncate group-hover:whitespace-normal">
+            {order.item}
+          </h4>
+          
+          <div className="flex items-center gap-2 mb-6">
+            <div className="avatar w-6 h-6 text-[0.6rem] bg-bg-surface border-white/5">
+              {customer?.name?.charAt(0) || '?'}
+            </div>
+            <span className="text-xs font-bold text-text-secondary truncate">{customer?.name || 'Unknown Client'}</span>
+          </div>
+          
+          <div className="flex items-end justify-between gap-4 pt-4 border-t border-white/[0.03]">
+             <div>
+                <div className="text-[0.6rem] font-black text-text-muted uppercase tracking-widest mb-1">Contract Value</div>
+                <div className="text-lg font-black text-primary">{formatNaira(order.amount)}</div>
+             </div>
+             
+             <div className="flex gap-1">
+               <a href={waLink(customer?.phone || '')} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#25D36610] text-[#25D366] hover:bg-[#25D36620] transition-colors">
+                  <MessageCircle size={14} />
+               </a>
+               <button className="w-9 h-9 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors" onClick={() => onDelete(order)}>
+                  <Trash2 size={14} />
+               </button>
+             </div>
+          </div>
+          
+          <div className="mt-4">
+            <select
+              className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-[0.7rem] font-black uppercase tracking-widest text-text-secondary focus:ring-0 transition-colors"
+              value={order.status}
+              onChange={e => onStatusChange(order.id, { status: e.target.value })}
+            >
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -116,78 +142,81 @@ export default function Orders({ store }) {
     orders.filter(o => o.status === status).reduce((s, o) => s + (Number(o.amount) || 0), 0);
 
   return (
-    <div className="page-content">
+    <div className="p-6 lg:p-12 mt-20">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4" style={{ flexWrap: 'wrap', gap: 12 }}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Orders</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
-            {orders.length} total order{orders.length !== 1 ? 's' : ''}
+          <h1 className="text-3xl font-black text-white tracking-tighter mb-2">Order Ledger</h1>
+          <p className="text-text-secondary font-medium tracking-tight">
+            Tracking <span className="text-primary font-black">{orders.length}</span> active pipelines.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setModal('add')}>
-          <Plus size={16} /> New Order
+        <button className="btn btn-primary h-12 shadow-xl" onClick={() => setModal('add')}>
+          <Plus size={18} /> Log New Transaction
         </button>
       </div>
 
-      {/* Kanban */}
-      <div className="kanban-grid">
+      {/* Kanban Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
         {STATUSES.map(status => {
-          const col = COL_COLORS[status];
+          const config = COL_CONFIG[status];
+          const Icon = config.icon;
           const colOrders = orders.filter(o => o.status === status);
           return (
             <div
               key={status}
-              className="kanban-col"
-              style={{ background: col.bg, borderColor: `${col.accent}22` }}
+              className="flex flex-col min-h-[500px] h-full"
             >
-              <div className="kanban-col-header">
-                <div className="kanban-col-title" style={{ color: col.accent }}>
-                  {col.dot} {status}
+              {/* Column Header */}
+              <div className="flex items-center justify-between mb-6 px-1">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.01]" style={{ color: config.accent }}>
+                    <Icon size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest">{status}</h3>
+                    <p className="text-[0.65rem] font-bold text-text-muted mt-0.5">{colOrders.length} {colOrders.length === 1 ? 'Project' : 'Projects'}</p>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {formatNaira(colRevenue(status))}
-                  </span>
-                  <span style={{
-                    background: col.accent,
-                    color: '#000',
-                    borderRadius: 99,
-                    width: 20, height: 20,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.68rem', fontWeight: 700,
-                  }}>
-                    {colOrders.length}
-                  </span>
+                <div className="text-right">
+                  <div className="text-xs font-black text-text-muted uppercase tracking-widest mb-1">Col Revenue</div>
+                  <div className="text-lg font-black text-white">{formatNaira(colRevenue(status))}</div>
                 </div>
               </div>
 
-              {colOrders.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  No {status.toLowerCase()} orders
-                </div>
-              ) : (
-                colOrders.map(order => (
-                  <KanbanCard
-                    key={order.id}
-                    order={order}
-                    customer={getCustomer(order.customerId)}
-                    formatNaira={formatNaira}
-                    waLink={waLink}
-                    onEdit={o => setModal({ edit: o })}
-                    onDelete={o => setModal({ del: o })}
-                    onStatusChange={updateOrder}
-                  />
-                ))
-              )}
+              {/* Kanban Column */}
+              <div 
+                className="flex-1 p-4 rounded-[2rem] border border-white/[0.04] space-y-4"
+                style={{ background: `linear-gradient(180deg, ${config.bg} 0%, transparent 100%)` }}
+              >
+                {colOrders.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-center opacity-40">
+                     <ShoppingBag size={40} className="text-text-muted mb-4" />
+                     <p className="text-xs font-black uppercase tracking-widest text-text-muted">No Pipeline Data</p>
+                  </div>
+                ) : (
+                  colOrders.map(order => (
+                    <KanbanCard
+                      key={order.id}
+                      order={order}
+                      customer={getCustomer(order.customerId)}
+                      formatNaira={formatNaira}
+                      waLink={waLink}
+                      onEdit={o => setModal({ edit: o })}
+                      onDelete={o => setModal({ del: o })}
+                      onStatusChange={updateOrder}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Add Modal */}
+      {/* Modals */}
       {modal === 'add' && (
-        <Modal title="New Order" onClose={() => setModal(null)}>
+        <Modal title="Initialize Transaction" onClose={() => setModal(null)}>
           <OrderForm
             customers={customers}
             onSave={data => { addOrder(data); setModal(null); }}
@@ -196,9 +225,8 @@ export default function Orders({ store }) {
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {modal?.edit && (
-        <Modal title="Edit Order" onClose={() => setModal(null)}>
+        <Modal title="Modify Project Data" onClose={() => setModal(null)}>
           <OrderForm
             initial={modal.edit}
             customers={customers}
@@ -208,17 +236,19 @@ export default function Orders({ store }) {
         </Modal>
       )}
 
-      {/* Delete Confirm */}
       {modal?.del && (
-        <Modal title="Delete Order?" onClose={() => setModal(null)}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Delete order <strong style={{ color: 'var(--text-primary)' }}>{modal.del.item}</strong>? This cannot be undone.
-          </p>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-            <button className="btn btn-danger" onClick={() => { deleteOrder(modal.del.id); setModal(null); }}>
-              <Trash2 size={14} /> Delete
-            </button>
+        <Modal title="Discard Pipeline?" onClose={() => setModal(null)}>
+          <div className="text-center p-4">
+             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+                <Trash2 size={32} />
+             </div>
+             <p className="text-base text-text-secondary font-medium leading-relaxed mb-8 px-6">
+               Are you certain you want to delete the order for <strong className="text-white">{modal.del.item}</strong>? This data will be purged.
+             </p>
+             <div className="flex gap-3">
+               <button className="btn btn-secondary flex-1" onClick={() => setModal(null)}>Retain</button>
+               <button className="btn btn-danger flex-1" onClick={() => { deleteOrder(modal.del.id); setModal(null); }}>Discard permanently</button>
+             </div>
           </div>
         </Modal>
       )}

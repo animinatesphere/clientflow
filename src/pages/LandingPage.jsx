@@ -1,442 +1,422 @@
-import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Users, ShoppingBag, Radio, Zap, ChevronRight, Star, ArrowRight, Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
+import {
+  MessageCircle,
+  TrendingUp,
+  Radio,
+  Users,
+  ShieldCheck,
+  Zap,
+  ArrowRight,
+  Play,
+  CheckCircle2,
+  ChevronRight,
+  Star as StarIcon,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
-/* ─── Floating particle ─────────────────────────────────────────────── */
-function Particle({ style }) {
-  return <div className="lp-particle" style={style} />;
-}
-
-/* ─── Animated counter ─────────────────────────────────────────────── */
-function Counter({ target, suffix = '', prefix = '' }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const started = useRef(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started.current) {
-        started.current = true;
-        const duration = 1800;
-        const steps = 60;
-        const increment = target / steps;
-        let current = 0;
-        const timer = setInterval(() => {
-          current += increment;
-          if (current >= target) { setCount(target); clearInterval(timer); }
-          else setCount(Math.floor(current));
-        }, duration / steps);
-      }
-    }, { threshold: 0.3 });
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [target]);
-
-  return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
-}
-
-/* ─── Feature Card ──────────────────────────────────────────────────── */
-function FeatureCard({ icon: Icon, title, desc, color, delay }) {
-  return (
-    <div className="lp-feature-card" style={{ animationDelay: delay }}>
-      <div className="lp-feature-icon" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
-        <Icon size={22} color={color} />
-      </div>
-      <h3 className="lp-feature-title">{title}</h3>
-      <p className="lp-feature-desc">{desc}</p>
-    </div>
-  );
-}
-
-/* ─── Mock WhatsApp chat bubble ─────────────────────────────────────── */
-function ChatBubble({ msg, from, delay, color }) {
+function FeatureCard({ icon: Icon, title, description, delay = 0 }) {
   return (
     <div
-      className="lp-chat-bubble"
-      style={{
-        alignSelf: from === 'me' ? 'flex-end' : 'flex-start',
-        background: from === 'me' ? 'var(--green)' : 'var(--bg-hover)',
-        color: from === 'me' ? '#000' : 'var(--text-primary)',
-        animationDelay: delay,
-      }}
+      className="group relative p-8 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-primary/20 hover:bg-white/[0.04] transition-all duration-500 overflow-hidden"
     >
-      {msg}
+      <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity">
+        <Icon size={120} className="text-primary" />
+      </div>
+      <div className="relative z-10">
+        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-500">
+          <Icon size={24} />
+        </div>
+        <h3 className="text-xl font-bold mb-3 text-white tracking-tight">{title}</h3>
+        <p className="text-text-secondary leading-relaxed text-sm lg:text-base">{description}</p>
+      </div>
     </div>
   );
 }
 
-/* ─── Landing Page ──────────────────────────────────────────────────── */
+function PricingCard({ title, price, features, recommended = false, cta = "Get Started" }) {
+  return (
+    <div className={`relative p-8 rounded-3xl border ${recommended ? 'border-primary bg-primary/[0.03] shadow-[0_0_80px_-20px_rgba(37,211,102,0.15)]' : 'border-white/5 bg-white/[0.02]'} flex flex-col h-full transition-all duration-500 hover:translate-y-[-8px]`}>
+      {recommended && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-primary text-black text-[0.7rem] font-black uppercase tracking-widest rounded-full">
+          Most Popular
+        </div>
+      )}
+      <div className="mb-8">
+        <h3 className="text-lg font-bold text-text-secondary mb-2 uppercase tracking-widest">{title}</h3>
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl lg:text-5xl font-black">₦{price}</span>
+          <span className="text-text-muted font-medium">/mo</span>
+        </div>
+      </div>
+      <ul className="space-y-4 mb-10 flex-grow">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-center gap-3 text-sm text-text-secondary">
+            <CheckCircle2 size={18} className={recommended ? "text-primary" : "text-text-muted"} />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      <Link
+        to="/signup"
+        className={`btn w-full h-14 ${recommended ? 'btn-primary' : 'btn-secondary'} text-base`}
+      >
+        {cta}
+      </Link>
+    </div>
+  );
+}
+
+const StarElement = ({ className }) => (
+  <StarIcon className={`text-yellow-500 fill-yellow-500 ${className}`} size={16} />
+);
+
 export default function LandingPage() {
-  const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    // Trigger entrance animations
-    setTimeout(() => setVisible(true), 50);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    width:  `${Math.random() * 6 + 2}px`,
-    height: `${Math.random() * 6 + 2}px`,
-    left:   `${Math.random() * 100}%`,
-    top:    `${Math.random() * 100}%`,
-    background: i % 3 === 0 ? 'var(--green)' : i % 3 === 1 ? 'var(--blue)' : 'var(--amber)',
-    opacity: Math.random() * 0.5 + 0.1,
-    animationDuration: `${Math.random() * 6 + 4}s`,
-    animationDelay: `${Math.random() * 4}s`,
-    borderRadius: '50%',
-  }));
-
   return (
-    <div className="lp-root">
-      {/* Animated background grid */}
-      <div className="lp-grid-bg" />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[5%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
 
-      {/* Glow orbs */}
-      <div className="lp-orb lp-orb-1" />
-      <div className="lp-orb lp-orb-2" />
-      <div className="lp-orb lp-orb-3" />
-
-      {/* Floating particles */}
-      {particles.map((p, i) => <Particle key={i} style={p} />)}
-
-      {/* ── NAV ── */}
-      <nav className={`lp-nav ${visible ? 'lp-nav--visible' : ''}`}>
-        <div className="lp-nav-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="lp-logo-icon">
-              <MessageCircle size={20} color="#000" fill="#000" />
-            </div>
-            <span className="lp-logo-text">Client<span>Flow</span></span>
+      {/* Navigation */}
+      <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'py-4 bg-bg-primary/80 backdrop-blur-xl border-b border-white/5' : 'py-8'}`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(37,211,102,0.4)]">
+                <MessageCircle size={22} color="#000" fill="#000" />
+             </div>
+             <span className="text-xl font-black tracking-tighter text-white">Client<span className="text-primary">Flow</span></span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Made for Nigerian businesses 🇳🇬</span>
-            <button className="btn btn-primary btn-sm" onClick={() => navigate('/login')}>
-              Login <ChevronRight size={14} />
-            </button>
+          
+          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-text-secondary">
+             <a href="#features" className="hover:text-primary transition-colors">Features</a>
+             <a href="#pricing" className="hover:text-primary transition-colors">Pricing</a>
+             <a href="#testimonials" className="hover:text-primary transition-colors">Success Stories</a>
+          </div>
+
+          <div className="flex items-center gap-4">
+             <Link to="/login" className="hidden sm:block text-sm font-bold hover:text-primary transition-colors">Log In</Link>
+             <Link to="/signup" className="btn btn-primary px-6 h-11 text-sm shadow-xl">Get Started Free</Link>
           </div>
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="lp-hero">
-        <div className={`lp-hero-badge ${visible ? 'lp-anim-in' : ''}`} style={{ animationDelay: '0.1s' }}>
-          <span className="lp-badge-dot" />
-          <span>🇳🇬 Built for Nigerian WhatsApp Sellers</span>
-        </div>
+      {/* Hero Section */}
+      <section className="relative pt-40 pb-24 lg:pt-56 lg:pb-40 px-6 overflow-hidden">
+         <div className="max-w-6xl mx-auto text-center relative z-10">
+            {/* Announcement Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-primary mb-10 fadeInUp">
+               <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+               </span>
+               New: Bulk Invoicing via WhatsApp
+            </div>
 
-        <h1 className={`lp-hero-title ${visible ? 'lp-anim-in' : ''}`} style={{ animationDelay: '0.25s' }}>
-          Run your business like a <br />
-          <span className="lp-gradient-text">professional</span>
-          <span className="lp-cursor" />
-        </h1>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-8 leading-[1.05] fadeInUp">
+               Automate Your <br />
+               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-secondary animate-gradient-x">WhatsApp CRM</span>
+            </h1>
 
-        <p className={`lp-hero-sub ${visible ? 'lp-anim-in' : ''}`} style={{ animationDelay: '0.4s' }}>
-          ClientFlow helps you manage customers, track orders, and reply faster on WhatsApp —
-          all in one place. No more lost messages. No more confusion.
-        </p>
+            <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed font-medium fadeInUp" style={{ animationDelay: '0.1s' }}>
+               The fastest way for Nigerian small businesses to manage customers, track orders, and send broadcasts without saving numbers.
+            </p>
 
-        <div className={`lp-hero-actions ${visible ? 'lp-anim-in' : ''}`} style={{ animationDelay: '0.55s' }}>
-          <button className="lp-cta-btn" onClick={() => navigate('/signup')}>
-            <span>Start for Free</span>
-            <ArrowRight size={18} />
-            <div className="lp-cta-shine" />
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            <Check size={14} color="var(--green)" />
-            No credit card · Free forever plan
-          </div>
-        </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 fadeInUp" style={{ animationDelay: '0.2s' }}>
+               <Link to="/signup" className="btn btn-primary h-16 px-10 text-lg shadow-2xl group">
+                  Start My Free Trial <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+               </Link>
+               <button className="btn btn-secondary h-16 px-10 text-lg group">
+                  <Play size={20} className="fill-current" /> Watch Demo
+               </button>
+            </div>
 
-        {/* Stars */}
-        <div className={`lp-stars ${visible ? 'lp-anim-in' : ''}`} style={{ animationDelay: '0.7s' }}>
-          {[...Array(5)].map((_, i) => <Star key={i} size={15} fill="var(--amber)" color="var(--amber)" />)}
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: 6 }}>
-            Loved by 500+ Nigerian vendors
-          </span>
-        </div>
+            {/* Trusted By */}
+            <div className="mt-24 pt-12 border-t border-white/5 fadeInUp" style={{ animationDelay: '0.4s' }}>
+                <p className="text-[0.7rem] uppercase tracking-[0.3em] font-black text-text-muted mb-8">Trusted by 500+ Nigerian Entrepreneurs</p>
+                <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+                    <span className="text-2xl font-black italic">MAZAD</span>
+                    <span className="text-xl font-bold">Ade's Kitchen</span>
+                    <span className="text-2xl font-serif">KORE</span>
+                    <span className="text-2xl font-bold tracking-widest">BEAU</span>
+                    <span className="text-xl font-mono">NaijaStore</span>
+                </div>
+            </div>
+         </div>
+
+         {/* Floating Dashboard Mockup */}
+         <div className="mt-20 max-w-6xl mx-auto relative perspective-1000 fadeInUp" style={{ animationDelay: '0.5s' }}>
+             <div className="relative group bg-bg-secondary rounded-[2rem] p-2 border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                <div className="bg-bg-primary rounded-[1.5rem] overflow-hidden border border-white/5">
+                   <div className="h-10 bg-white/5 flex items-center gap-2 px-4 border-b border-white/5">
+                      <div className="flex gap-1.5">
+                         <div className="w-3 h-3 rounded-full bg-red-500/20" />
+                         <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
+                         <div className="w-3 h-3 rounded-full bg-green-500/20" />
+                      </div>
+                      <div className="mx-auto bg-white/5 px-6 py-1 rounded-full text-[10px] text-text-muted font-bold">clientflow.io/dashboard</div>
+                   </div>
+                   <div className="p-4 sm:p-8">
+                       <div className="grid grid-cols-12 gap-6">
+                           <div className="col-span-3 space-y-4">
+                              <div className="h-12 w-full bg-white/5 rounded-xl shimmer" />
+                              <div className="h-40 w-full bg-white/5 rounded-2xl shimmer" />
+                              <div className="h-8 w-full bg-white/5 rounded-lg shimmer" />
+                              <div className="h-8 w-full bg-white/5 rounded-lg shimmer" />
+                           </div>
+                           <div className="col-span-9 space-y-6">
+                              <div className="grid grid-cols-3 gap-6">
+                                 <div className="h-32 bg-primary/5 border border-primary/10 rounded-2xl p-4 flex flex-col justify-between">
+                                    <div className="h-4 w-12 bg-primary/20 rounded" />
+                                    <div className="h-8 w-24 bg-primary/40 rounded" />
+                                 </div>
+                                 <div className="h-32 bg-white/5 border border-white/5 rounded-2xl p-4" />
+                                 <div className="h-32 bg-white/5 border border-white/5 rounded-2xl p-4" />
+                              </div>
+                              <div className="h-64 w-full bg-white/5 border border-white/5 rounded-3xl p-6">
+                                 <div className="flex justify-between mb-8">
+                                    <div className="h-6 w-32 bg-white/10 rounded" />
+                                    <div className="h-6 w-24 bg-white/10 rounded" />
+                                 </div>
+                                 <div className="space-y-4">
+                                    {[1,2,3].map(i => (
+                                      <div key={i} className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white/10 rounded-xl" />
+                                        <div className="flex-1 space-y-2">
+                                           <div className="h-3 w-1/3 bg-white/10 rounded" />
+                                           <div className="h-2 w-1/4 bg-white/5 rounded" />
+                                        </div>
+                                        <div className="h-6 w-16 bg-primary/10 rounded-full" />
+                                      </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           </div>
+                       </div>
+                   </div>
+                </div>
+             </div>
+         </div>
       </section>
 
-      {/* ── MOCK APP PREVIEW ── */}
-      <div className={`lp-preview-wrap ${visible ? 'lp-anim-in' : ''}`} style={{ animationDelay: '0.5s' }}>
-        {/* Chat demo */}
-        <div className="lp-preview-card lp-chat-card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,var(--green),#0e8a3e)' }}>C</div>
+      {/* Features Grid */}
+      <section id="features" className="py-24 lg:py-40 px-6">
+         <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-20 max-w-3xl mx-auto">
+               <h2 className="text-xs uppercase tracking-[0.4em] font-black text-primary mb-4">Features</h2>
+               <h3 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">Everything You Need <br /> To Close More Deals.</h3>
+               <p className="text-lg text-text-secondary font-medium">Built specifically for the African business ecosystem. No fluff, just the tools that actually grow your revenue.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               <FeatureCard
+                 icon={Users}
+                 title="Bulk Messaging"
+                 description="Send personalized updates to all your customers at once. No more saving individual numbers or getting banned."
+               />
+               <FeatureCard
+                 icon={Zap}
+                 title="Quick Replies"
+                 description="Save your FAQ responses and pricing lists. Send them with one click instead of typing the same thing 100 times."
+               />
+               <FeatureCard
+                 icon={TrendingUp}
+                 title="Revenue Tracking"
+                 description="See exactly how much you're making daily. Track pending payments and delivered orders automatically."
+               />
+               <FeatureCard
+                 icon={Radio}
+                 title="Smart Broadcasts"
+                 description="Segment your audience by tags (VIP, New, Returning) and send ultra-targeted messages that convert."
+               />
+               <FeatureCard
+                 icon={ShieldCheck}
+                 title="Auto-Invoicing"
+                 description="Generate professional PDF receipts and invoices and send them directly to WhatsApp in seconds."
+               />
+               <FeatureCard
+                 icon={MessageCircle}
+                 title="Contact Management"
+                 description="Own your customer data. Import numbers, add private notes, and never lose a lead in a crowded chat again."
+               />
+            </div>
+         </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 lg:py-40 px-6 bg-white/[0.01]">
+         <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-20">
+               <h2 className="text-xs uppercase tracking-[0.4em] font-black text-primary mb-4">Pricing</h2>
+               <h3 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">Start Small, <br /> Scale Fast.</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+               <PricingCard
+                 title="Free Starter"
+                 price="0"
+                 features={[
+                   "Up to 20 Customers",
+                   "3 Active Orders",
+                   "5 Quick Replies",
+                   "Basic Broadcasts",
+                   "WhatsApp Support"
+                 ]}
+                 cta="Start for Free"
+               />
+               <PricingCard
+                 title="Growth Pro"
+                 price="1,500"
+                 recommended={true}
+                 features={[
+                   "Unlimited Customers",
+                   "Unlimited Orders",
+                   "Unlimited Quick Replies",
+                   "Priority Smart Broadcasts",
+                   "Custom Branding",
+                   "Revenue Analytics",
+                   "Priority Support"
+                 ]}
+                 cta="Upgrade to Pro"
+               />
+               <PricingCard
+                 title="Business Elite"
+                 price="12,500"
+                 features={[
+                   "Multiple Team Access",
+                   "API Integrations",
+                   "Multi-Channel Manager",
+                   "Dedicated Account Manager",
+                   "Advanced Security",
+                   "Early Access Features"
+                 ]}
+                 cta="Contact Sales"
+               />
+            </div>
+         </div>
+      </section>
+
+      {/* Social Proof / Testimonials */}
+      <section id="testimonials" className="py-24 lg:py-40 px-6 overflow-hidden">
+         <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+               <div>
+                  <h2 className="text-xs uppercase tracking-[0.4em] font-black text-primary mb-4">Testimonials</h2>
+                  <h3 className="text-5xl lg:text-7xl font-black mb-8 leading-[1.1] tracking-tight">Real Results <br /> From Real Souls.</h3>
+                  <p className="text-xl text-text-secondary mb-10 leading-relaxed font-medium">Join thousands of Nigerian entrepreneurs who have transformed their chaotic WhatsApp chats into a streamlined sales engine.</p>
+                  
+                  <div className="flex gap-4">
+                     <div className="flex flex-col">
+                        <span className="text-4xl font-black text-white">2.4k+</span>
+                        <span className="text-xs font-black uppercase tracking-widest text-text-muted mt-2">Active Users</span>
+                     </div>
+                     <div className="w-px h-16 bg-white/10 mx-4" />
+                     <div className="flex flex-col">
+                        <span className="text-4xl font-black text-white">₦500M+</span>
+                        <span className="text-xs font-black uppercase tracking-widest text-text-muted mt-2">Volume Processed</span>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="relative">
+                  <div className="card p-10 relative z-10">
+                     <div className="flex gap-1 mb-6">
+                        <StarElement /><StarElement /><StarElement /><StarElement /><StarElement />
+                     </div>
+                     <p className="text-2xl font-bold italic leading-relaxed text-white mb-8">
+                        "ClientFlow changed everything for my pastry business. I used to spend 4 hours every night replying to customers. Now I do it in 20 minutes."
+                     </p>
+                     <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-primary to-secondary p-1">
+                           <div className="w-full h-full rounded-full bg-bg-primary overflow-hidden">
+                              <img src="https://ui-avatars.com/api/?name=Funmi+O&background=random" alt="User" />
+                           </div>
+                        </div>
+                        <div>
+                           <div className="text-lg font-black text-white">Funmi Okeremute</div>
+                           <div className="text-sm font-bold text-primary">Founder, Treats By Funmi</div>
+                        </div>
+                     </div>
+                  </div>
+                  {/* Decorative background cards */}
+                  <div className="absolute top-10 -right-4 -left-4 h-full bg-primary/5 rounded-3xl -z-10 rotate-2 translate-y-4" />
+                  <div className="absolute top-10 -right-10 -left-10 h-full bg-secondary/5 rounded-3xl -z-20 -rotate-2 translate-y-8" />
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 lg:py-40 px-6">
+         <div className="max-w-5xl mx-auto">
+            <div className="relative rounded-[3rem] bg-gradient-to-br from-primary to-emerald-900 overflow-hidden p-12 lg:p-24 text-center">
+               <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+               <div className="relative z-10">
+                  <h2 className="text-4xl md:text-6xl font-black text-black mb-8 leading-tight tracking-tight">Ready To Grow Your <br /> Business Professionally?</h2>
+                  <p className="text-lg lg:text-xl text-black/70 font-bold mb-12 max-w-xl mx-auto">Stop managing your business from a random gallery. Setup your CRM in 2 minutes today.</p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                     <Link to="/signup" className="btn bg-black text-white px-10 h-16 text-lg hover:shadow-2xl active:scale-95 transition-all">Start For Free Today</Link>
+                     <p className="text-[0.7rem] uppercase tracking-widest font-black text-black/50">No credit card required</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-20 px-6 border-t border-white/5">
+         <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+            <div className="col-span-2 lg:col-span-1">
+               <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                     <MessageCircle size={18} color="#000" fill="#000" />
+                  </div>
+                  <span className="text-lg font-black tracking-tighter text-white">Client<span className="text-primary">Flow</span></span>
+               </div>
+               <p className="text-sm text-text-secondary leading-relaxed max-w-xs">Connecting African entrepreneurs with their customers through professional WhatsApp automation.</p>
+            </div>
             <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>Chidera Okafor</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--green)' }}>● online</div>
+               <h4 className="text-xs uppercase tracking-widest font-black text-white mb-6">Product</h4>
+               <ul className="space-y-4 text-sm text-text-secondary font-bold">
+                  <li><a href="#" className="hover:text-primary transition-colors">Features</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">Roadmap</a></li>
+               </ul>
             </div>
-            <div style={{ marginLeft: 'auto' }}>
-              <span className="badge badge-vip">🟡 VIP</span>
+            <div>
+               <h4 className="text-xs uppercase tracking-widest font-black text-white mb-6">Legal</h4>
+               <ul className="space-y-4 text-sm text-text-secondary font-bold">
+                  <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">Refund Policy</a></li>
+               </ul>
             </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <ChatBubble msg="Hello! I want to order 5 flyers 🙏" from="them" delay="0.8s" />
-            <ChatBubble msg="Great choice! ✅ Your order is confirmed. Total: ₦15,000" from="me" delay="1.2s" />
-            <ChatBubble msg="Your order is ready for pickup! 🎉" from="me" delay="1.6s" />
-          </div>
-        </div>
-
-        {/* Stats mini card */}
-        <div className="lp-preview-card lp-stats-card">
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 12 }}>TODAY'S OVERVIEW</div>
-          {[
-            { label: 'New Orders', val: '4', color: 'var(--amber)' },
-            { label: 'Revenue',    val: '₦48,000', color: 'var(--green)' },
-            { label: 'Customers',  val: '12', color: 'var(--blue)' },
-          ].map(s => (
-            <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '8px 10px', background: 'var(--bg-hover)', borderRadius: 8 }}>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{s.label}</span>
-              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: s.color }}>{s.val}</span>
+            <div>
+               <h4 className="text-xs uppercase tracking-widest font-black text-white mb-6">Connect</h4>
+               <ul className="space-y-4 text-sm text-text-secondary font-bold">
+                  <li><a href="#" className="hover:text-primary transition-colors">Twitter</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">LinkedIn</a></li>
+                  <li><a href="#" className="hover:text-primary transition-colors">WhatsApp Community</a></li>
+               </ul>
             </div>
-          ))}
-          <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
-            <div style={{ flex: 1, height: 4, borderRadius: 99, background: 'var(--green)', opacity: 0.8 }} />
-            <div style={{ flex: 0.6, height: 4, borderRadius: 99, background: 'var(--amber)', opacity: 0.7 }} />
-            <div style={{ flex: 0.4, height: 4, borderRadius: 99, background: 'var(--blue)', opacity: 0.6 }} />
-          </div>
-        </div>
-
-        {/* Quick reply card */}
-        <div className="lp-preview-card lp-reply-card">
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: 10 }}>QUICK REPLIES</div>
-          {['Greeting 👋', 'Order Confirmed ✅', 'Payment Reminder 💰'].map(r => (
-            <div key={r} style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', padding: '7px 10px', background: 'var(--bg-hover)', borderRadius: 8, marginBottom: 6, cursor: 'pointer', border: '1px solid var(--border)', transition: 'all 0.2s' }}>
-              {r}
+         </div>
+         <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs font-bold text-text-muted">© 2026 ClientFlow Technologies Ltd. Built for the high-end entrepreneur.</p>
+            <div className="flex items-center gap-4 text-text-muted">
+               <span className="text-[10px] font-black p-1 px-2 rounded bg-white/5 uppercase tracking-widest border border-white/5">NIGERIA</span>
+               <span className="text-[10px] font-black p-1 px-2 rounded bg-white/5 uppercase tracking-widest border border-white/5">UK</span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── STATS STRIP ── */}
-      <div className="lp-stats-strip">
-        {[
-          { val: 500,  suffix: '+', label: 'Active Users', prefix: '' },
-          { val: 12000, suffix: '+', label: 'Orders Tracked', prefix: '' },
-          { val: 1,    suffix: 'B+', label: 'In Revenue Managed', prefix: '₦' },
-          { val: 98,   suffix: '%', label: 'Satisfaction Rate', prefix: '' },
-        ].map(s => (
-          <div key={s.label} className="lp-stat-item">
-            <div className="lp-stat-val">
-              <Counter target={s.val} suffix={s.suffix} prefix={s.prefix} />
-            </div>
-            <div className="lp-stat-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── FEATURES ── */}
-      <section className="lp-section">
-        <div className="lp-section-label">Everything you need</div>
-        <h2 className="lp-section-title">
-          Manage your WhatsApp business <br />
-          <span className="lp-gradient-text">the smart way</span>
-        </h2>
-
-        <div className="lp-features-grid">
-          <FeatureCard
-            icon={Users}
-            title="Customer Management"
-            desc="Save customer names, numbers and tag them as New, Returning, or VIP. Never forget who you're talking to."
-            color="var(--green)"
-            delay="0s"
-          />
-          <FeatureCard
-            icon={ShoppingBag}
-            title="Order Tracking"
-            desc="Track every order from Pending to Paid to Delivered. Know exactly what's happening with each job."
-            color="var(--amber)"
-            delay="0.1s"
-          />
-          <FeatureCard
-            icon={MessageCircle}
-            title="Quick Replies"
-            desc="Save your most-used messages and send them with one click. Reply professionally every single time."
-            color="var(--blue)"
-            delay="0.2s"
-          />
-          <FeatureCard
-            icon={Radio}
-            title="Broadcast Messages"
-            desc="Send announcements, promos, or updates to all your customers at once without the stress."
-            color="var(--purple)"
-            delay="0.3s"
-          />
-          <FeatureCard
-            icon={Zap}
-            title="Instant WhatsApp Links"
-            desc="Click any customer's number to open WhatsApp Web directly. Zero extra steps, maximum speed."
-            color="var(--green)"
-            delay="0.4s"
-          />
-          <FeatureCard
-            icon={Star}
-            title="Revenue Dashboard"
-            desc="See your total revenue, active orders, and customer growth all in one beautiful dashboard."
-            color="var(--amber)"
-            delay="0.5s"
-          />
-        </div>
-      </section>
-
-      {/* ── PROBLEM / SOLUTION ── */}
-      <section className="lp-section lp-problem-section">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-          <div>
-            <div className="lp-section-label">The Problem</div>
-            <h2 className="lp-section-title" style={{ textAlign: 'left', fontSize: '1.8rem' }}>
-              Sound familiar? 😩
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
-              {[
-                'Customer messages get lost in the chat',
-                'You forget who ordered what',
-                'No way to track who has paid or not',
-                'Can\'t send bulk messages easily',
-                'Business looks unprofessional',
-              ].map(p => (
-                <div key={p} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  <span style={{ color: 'var(--red)', fontSize: '1rem', marginTop: 1 }}>✗</span>
-                  {p}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="lp-section-label" style={{ color: 'var(--green)' }}>The Solution</div>
-            <h2 className="lp-section-title" style={{ textAlign: 'left', fontSize: '1.8rem' }}>
-              ClientFlow fixes all of it ✅
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
-              {[
-                'All customers saved with name, number & tag',
-                'Every order tracked with clear status',
-                'Revenue calculated automatically',
-                'Broadcast messages to all customers',
-                'Look like a top-level pro business',
-              ].map(p => (
-                <div key={p} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  <Check size={16} color="var(--green)" style={{ marginTop: 3, flexShrink: 0 }} />
-                  {p}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRICING ── */}
-      <section className="lp-section">
-        <div className="lp-section-label">Simple Pricing</div>
-        <h2 className="lp-section-title">Start free, upgrade when ready</h2>
-        <div className="lp-pricing-grid">
-          {/* Free */}
-          <div className="lp-price-card">
-            <div className="lp-price-name">Starter</div>
-            <div className="lp-price-val">Free</div>
-            <div className="lp-price-period">forever</div>
-            <hr className="divider" />
-            {['Up to 20 customers', '50 orders/month', 'Quick replies', 'Basic dashboard'].map(f => (
-              <div key={f} className="lp-price-feature"><Check size={14} color="var(--green)" /> {f}</div>
-            ))}
-            <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', marginTop: 20 }} onClick={() => navigate('/signup')}>
-              Get Started Free
-            </button>
-          </div>
-
-          {/* Pro */}
-          <div className="lp-price-card lp-price-card--pro">
-            <div className="lp-price-badge">Most Popular 🔥</div>
-            <div className="lp-price-name">Pro</div>
-            <div className="lp-price-val">₦1,500</div>
-            <div className="lp-price-period">per month</div>
-            <hr className="divider" />
-            {['Unlimited customers', 'Unlimited orders', 'Broadcast messages', 'Revenue analytics', 'Priority support'].map(f => (
-              <div key={f} className="lp-price-feature"><Check size={14} color="var(--green)" /> {f}</div>
-            ))}
-            <button className="lp-cta-btn" style={{ width: '100%', justifyContent: 'center', marginTop: 20, padding: '12px 20px' }} onClick={() => navigate('/signup')}>
-              Start Pro Trial
-              <div className="lp-cta-shine" />
-            </button>
-          </div>
-
-          {/* Business */}
-          <div className="lp-price-card">
-            <div className="lp-price-name">Business</div>
-            <div className="lp-price-val">₦3,000</div>
-            <div className="lp-price-period">per month</div>
-            <hr className="divider" />
-            {['Everything in Pro', 'Team access (3 users)', 'Custom branding', 'API access', 'Dedicated support'].map(f => (
-              <div key={f} className="lp-price-feature"><Check size={14} color="var(--amber)" /> {f}</div>
-            ))}
-            <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', marginTop: 20 }} onClick={() => navigate('/login')}>
-              Contact Sales
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="lp-section">
-        <div className="lp-section-label">Testimonials</div>
-        <h2 className="lp-section-title">What sellers are saying</h2>
-        <div className="lp-testimonials">
-          {[
-            { name: 'Amaka D.', role: 'Fashion Designer, Lagos', quote: 'ClientFlow changed my life! I used to lose track of orders all the time. Now everything is organized and my customers think I\'m so professional 😄', avatar: 'A' },
-            { name: 'Emeka O.', role: 'Graphic Designer, Abuja', quote: 'The quick replies feature alone is worth it. I send professional messages in seconds instead of typing the same thing over and over.', avatar: 'E' },
-            { name: 'Fatima B.', role: 'Food Vendor, Kano', quote: 'I track all my daily orders and revenue now. I finally know how much I\'m making every week. This is a must-have for any WhatsApp seller!', avatar: 'F' },
-          ].map(t => (
-            <div key={t.name} className="lp-testimonial-card">
-              <div style={{ display: 'flex', marginBottom: 8 }}>
-                {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="var(--amber)" color="var(--amber)" />)}
-              </div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 16 }}>
-                "{t.quote}"
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div className="avatar" style={{ background: 'linear-gradient(135deg,var(--green),var(--blue))' }}>{t.avatar}</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{t.name}</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ── */}
-      <section className="lp-final-cta">
-        <div className="lp-orb lp-orb-cta" />
-        <h2 className="lp-final-cta-title">
-          Ready to run your business like a pro?
-        </h2>
-        <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: 32, maxWidth: 480, margin: '0 auto 32px' }}>
-          Join hundreds of Nigerian sellers who use ClientFlow to stay organised, save time, and make more money.
-        </p>
-        <button className="lp-cta-btn lp-cta-btn--large" onClick={() => navigate('/signup')}>
-          <MessageCircle size={20} />
-          <span>Open ClientFlow Free</span>
-          <ArrowRight size={18} />
-          <div className="lp-cta-shine" />
-        </button>
-        <div style={{ marginTop: 16, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          ✓ Free plan · ✓ No setup needed · ✓ Works with any WhatsApp
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="lp-footer">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <div className="lp-logo-icon" style={{ width: 28, height: 28 }}>
-            <MessageCircle size={16} color="#000" fill="#000" />
-          </div>
-          <span className="lp-logo-text" style={{ fontSize: '1rem' }}>Client<span>Flow</span></span>
-        </div>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          © 2025 ClientFlow · Built with ❤️ for Nigerian businesses
-        </p>
+         </div>
       </footer>
     </div>
   );

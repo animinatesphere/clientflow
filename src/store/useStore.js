@@ -63,9 +63,12 @@ export function useStore() {
     save("cf_invoices", invoices);
   }, [invoices]);
 
-  /* ── Load from Supabase on first load ── */
+  /* ── Load from Supabase on session start or user change ── */
   useEffect(() => {
-    if (localStorage.getItem("cf_customers")) return;
+    if (!user?.id) return;
+    
+    // We only want to sync once per login session to avoid unnecessary traffic,
+    // but we must ensure we get at least one fresh fetch.
     async function loadFromSupabase() {
       try {
         const { data: customersData, error: cErr } = await supabase
@@ -156,7 +159,7 @@ export function useStore() {
       }
     }
     loadFromSupabase();
-  }, []);
+  }, [user?.id]);
 
   /* ── Realtime subscriptions ── */
   useEffect(() => {

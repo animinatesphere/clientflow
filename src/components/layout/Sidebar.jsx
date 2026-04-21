@@ -10,26 +10,16 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Receipt,
+  Headphones,
 } from "lucide-react";
 
 const NAV = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/dashboard",
-  },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { id: "customers", label: "Customers", icon: Users, path: "/customers" },
   { id: "orders", label: "Orders", icon: ShoppingBag, path: "/orders" },
-  {
-    id: "quick-replies",
-    label: "Quick Replies",
-    icon: MessageSquare,
-    path: "/quick-replies",
-  },
   { id: "broadcast", label: "Broadcast", icon: Radio, path: "/broadcast" },
-  { id: "settings", label: "Settings", icon: SettingsIcon, path: "/settings" },
   { id: "invoices", label: "Invoices", icon: Receipt, path: "/invoices" },
+  { id: "quick-replies", label: "Quick Replies", icon: MessageSquare, path: "/quick-replies" },
 ];
 
 export default function Sidebar({ isOpen, onClose, user, onLogout }) {
@@ -38,121 +28,84 @@ export default function Sidebar({ isOpen, onClose, user, onLogout }) {
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.6)",
-            zIndex: 99,
-          }}
+          className="fixed inset-0 bg-bg-primary/80 backdrop-blur-sm z-[99] lg:hidden"
           onClick={onClose}
         />
       )}
 
-      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
-        {/* Logo */}
-        <Link
-          to="/dashboard"
-          className="sidebar-logo"
-          style={{ textDecoration: "none" }}
-          onClick={onClose}
-        >
-          <div className="sidebar-logo-icon">
-            <MessageCircle size={20} color="#000" fill="#000" />
+      <aside className={`fixed inset-y-0 left-0 w-72 bg-bg-primary border-r border-white/5 z-[100] transform transition-transform duration-500 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0 shadow-[20px_0_60px_rgba(0,0,0,0.5)]" : "-translate-x-full"}`}>
+        {/* Logo Section */}
+        <Link to="/" className="h-20 px-8 flex items-center gap-3" onClick={onClose}>
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(37,211,102,0.2)]">
+            <MessageCircle size={18} color="#000" fill="#000" />
           </div>
-          <div className="sidebar-logo-text">
-            Client<span>Flow</span>
-          </div>
+          <span className="text-xl font-black tracking-tighter text-white">Client<span className="text-primary">Flow</span></span>
         </Link>
 
         {/* Navigation */}
-        <nav className="sidebar-nav">
-          <div className="sidebar-section-label">Main Menu</div>
-          {/* // eslint-disable-next-line no-unused-vars */}
+        <nav className="px-4 py-6 space-y-1.5 overflow-y-auto h-[calc(100vh-160px)]">
+          <div className="px-4 text-[0.65rem] font-black uppercase tracking-[0.2em] text-text-muted mb-4">Management</div>
           {NAV.map(({ id, label, icon: Icon, path }) => (
             <NavLink
               key={id}
               to={path}
               className={({ isActive }) =>
-                `nav-item ${isActive ? "active" : ""}`
+                `group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive 
+                  ? "bg-primary/5 text-primary" 
+                  : "text-text-secondary hover:bg-white/5 hover:text-white"}`
               }
               onClick={onClose}
-              style={{ textDecoration: "none" }}
             >
               {({ isActive }) => (
                 <>
-                  <Icon className="nav-icon" />
-                  <span style={{ flex: 1 }}>{label}</span>
-                  {isActive && <ChevronRight size={14} />}
+                  <Icon size={18} className={isActive ? "text-primary" : "text-text-muted group-hover:text-text-secondary"} />
+                  <span className="flex-1 text-sm font-bold tracking-tight">{label}</span>
+                  {isActive && <div className="w-1 h-4 bg-primary rounded-full shadow-[0_0_10px_rgba(37,211,102,0.5)]" />}
                 </>
               )}
             </NavLink>
           ))}
+
+          <div className="pt-8 px-4 text-[0.65rem] font-black uppercase tracking-[0.2em] text-text-muted mb-4">System</div>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive 
+                ? "bg-primary/5 text-primary" 
+                : "text-text-secondary hover:bg-white/5 hover:text-white"}`
+            }
+            onClick={onClose}
+          >
+            <SettingsIcon size={18} className="text-text-muted group-hover:text-text-secondary" />
+            <span className="text-sm font-bold tracking-tight">Settings</span>
+          </NavLink>
+          <a
+            href="#"
+            className="group flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-white/5 hover:text-white transition-all"
+          >
+            <Headphones size={18} className="text-text-muted group-hover:text-text-secondary" />
+            <span className="text-sm font-bold tracking-tight">Support</span>
+          </a>
         </nav>
 
         {/* User Profile Footer */}
-        <div
-          className="sidebar-footer"
-          style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              marginBottom: 16,
-            }}
-          >
-            <div
-              className="avatar"
-              style={{
-                width: 36,
-                height: 36,
-                fontSize: "0.8rem",
-                background: "var(--green)",
-                color: "#000",
-              }}
-            >
-              {user?.name?.charAt(0)}
-            </div>
-            <div style={{ flex: 1, overflow: "hidden" }}>
-              <div
-                style={{
-                  fontSize: "0.85rem",
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {user?.name || "User"}
-              </div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                Free Plan
-              </div>
-            </div>
-            <Link
-              to="/settings"
-              className="btn btn-ghost btn-sm"
-              style={{ padding: 4 }}
-              onClick={onClose}
-              title="Settings"
-            >
-              <SettingsIcon size={16} />
-            </Link>
+        <div className="absolute bottom-0 inset-x-0 p-4 border-t border-white/5 bg-bg-primary/50 backdrop-blur-md">
+          <div className="flex items-center gap-3 p-2 rounded-xl border border-transparent">
+             <div className="avatar w-10 h-10 border-white/10 text-white bg-gradient-to-tr from-white/10 to-transparent">
+               {user?.name?.charAt(0) || 'U'}
+             </div>
+             <div className="flex-1 min-w-0 pr-2">
+               <div className="text-sm font-black text-white truncate">{user?.name || "Entrepreneur"}</div>
+               <div className="text-[0.7rem] font-bold text-primary uppercase tracking-widest">Growth Pro</div>
+             </div>
+             <button 
+               onClick={onLogout}
+               className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-colors"
+               title="Log Out"
+             >
+               <LogOut size={16} />
+             </button>
           </div>
-
-          <button
-            className="btn btn-ghost btn-sm"
-            style={{
-              width: "100%",
-              justifyContent: "flex-start",
-              color: "var(--red)",
-              fontSize: "0.78rem",
-            }}
-            onClick={onLogout}
-          >
-            <LogOut size={14} /> Log Out
-          </button>
         </div>
       </aside>
     </>

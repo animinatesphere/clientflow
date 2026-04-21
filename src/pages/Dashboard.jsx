@@ -8,32 +8,74 @@ import {
   Plus,
   MessageCircle,
   ArrowRight,
+  ChevronRight,
+  Zap,
 } from "lucide-react";
 import Badge from "../components/ui/Badge";
 import UpgradeModal from "../components/ui/UpgradeModal";
+
+/* ─── Premium Sparkline ─────────────────────────────────────────── */
+function Sparkline({ color }) {
+  return (
+    <div className="mt-4 pt-4 border-t border-white/[0.03]">
+      <svg width="100%" height="40" viewBox="0 0 100 40" preserveAspectRatio="none" className="opacity-60">
+        <path
+          d="M0,35 Q10,10 20,25 T40,15 T60,30 T80,10 L100,5"
+          fill="none"
+          stroke={color}
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        <path
+          d="M0,35 Q10,10 20,25 T40,15 T60,30 T80,10 L100,5 L100,40 L0,40 Z"
+          fill={`url(#gradient-${color.replace('#', '')})`}
+          opacity="0.2"
+        />
+        <defs>
+          <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} />
+            <stop offset="100%" stopColor="transparent" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
 function StatCard({
   label,
   value,
   icon: Icon,
   accent,
-  iconBg,
   change,
   prefix = "",
+  showSparkline = false
 }) {
   return (
-    <div
-      className="stat-card"
-      style={{ "--accent": accent, "--icon-bg": iconBg }}
-    >
-      <div className="stat-card-icon">
-        <Icon size={20} color={accent} />
+    <div className="card group relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors" />
+      
+      <div className="relative z-10">
+        <div className="flex justify-between items-start mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-text-secondary group-hover:text-primary transition-colors">
+            <Icon size={22} />
+          </div>
+          {change && (
+            <div className={`px-2.5 py-1 rounded-lg text-[0.65rem] font-black uppercase tracking-wider ${change.includes('↑') ? 'bg-primary/10 text-primary' : 'bg-white/5 text-text-muted'}`}>
+              {change}
+            </div>
+          )}
+        </div>
+        
+        <div>
+          <div className="text-3xl font-black tracking-tight text-white mb-1">
+            {prefix}{typeof value === "number" ? value.toLocaleString("en-NG") : value}
+          </div>
+          <div className="text-sm font-bold text-text-secondary tracking-tight uppercase tracking-widest text-[0.65rem] opacity-70 italic">{label}</div>
+        </div>
+
+        {showSparkline && <Sparkline color={accent} />}
       </div>
-      <div className="stat-card-value" style={{ color: accent }}>
-        {prefix}
-        {typeof value === "number" ? value.toLocaleString("en-NG") : value}
-      </div>
-      <div className="stat-card-label">{label}</div>
-      {change && <div className="stat-card-change">{change}</div>}
     </div>
   );
 }
@@ -47,325 +89,173 @@ export default function Dashboard({ store }) {
   const recentCustomers = customers.slice(0, 4);
 
   return (
-    <div className="page-content">
-      {/* Stat Grid */}
-      <div className="stat-grid">
+    <div className="p-4 sm:p-6 lg:p-12 mt-20">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+        <div>
+          <h2 className="text-3xl font-black text-white tracking-tighter mb-2">Business Overview</h2>
+          <p className="text-text-secondary font-medium tracking-tight">Real-time performance across your WhatsApp funnel.</p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button onClick={() => navigate('/broadcast')} className="btn btn-secondary flex-1 md:flex-none h-11 sm:h-12 text-xs sm:text-sm">
+            <Radio size={16} /> <span className="hidden xs:inline">Broadcast</span><span className="xs:hidden">Blast</span>
+          </button>
+          <button onClick={() => navigate('/orders')} className="btn btn-primary flex-1 md:flex-none h-11 sm:h-12 text-xs sm:text-sm shadow-xl group">
+            <Plus size={16} className="group-hover:rotate-90 transition-transform" /> <span className="hidden xs:inline">New Order</span><span className="xs:hidden">Order</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <StatCard
-          label="Total Customers"
+          label="Total Leads"
           value={stats.totalCustomers}
           icon={Users}
           accent="var(--green)"
-          iconBg="rgba(37,211,102,0.12)"
-          change="↑ Growing steadily"
+          change="↑ 12.5% vs LW"
         />
         <StatCard
-          label="Active Orders"
+          label="Pending Deliveries"
           value={stats.activeOrders}
           icon={ShoppingBag}
           accent="var(--amber)"
-          iconBg="rgba(245,158,11,0.12)"
-          change={
-            stats.activeOrders > 0
-              ? `${stats.activeOrders} need attention`
-              : "All clear!"
-          }
+          change={`${stats.activeOrders} Active`}
         />
         <StatCard
-          label="Revenue Earned"
+          label="Collected Revenue"
           value={stats.revenue}
           prefix="₦"
           icon={TrendingUp}
           accent="var(--blue)"
-          iconBg="rgba(59,130,246,0.12)"
-          change="From delivered orders"
+          change="↑ 8.2% Growing"
+          showSparkline={true}
         />
         <StatCard
-          label="Broadcasts Sent"
+          label="Automation Volume"
           value={stats.broadcastsSent}
-          icon={Radio}
+          icon={Zap}
           accent="var(--purple)"
-          iconBg="rgba(139,92,246,0.12)"
-          change="Total messages sent"
+          change="100% System Ok"
         />
       </div>
-      {store.plan === "free" && (
-        <div
-          className="card mb-4"
-          style={{
-            border: "1px solid rgba(245,158,11,0.2)",
-            background: "rgba(245,158,11,0.03)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 12,
-            }}
-          >
-            <h3 className="card-title" style={{ color: "var(--amber)" }}>
-              Free Plan Usage
-            </h3>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => setShowUpgrade(true)}
-            >
-              Upgrade ↗
-            </button>
-          </div>
-          {[
-            { label: "Customers", used: store.customers.length, max: 20 },
-            { label: "Invoices", used: store.invoices.length, max: 3 },
-            { label: "Replies", used: store.replies.length, max: 5 },
-          ].map(({ label, used, max }) => (
-            <div key={label} style={{ marginBottom: 10 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "0.75rem",
-                  marginBottom: 4,
-                }}
-              >
-                <span style={{ color: "var(--text-secondary)" }}>{label}</span>
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: used >= max ? "var(--red)" : "var(--text-muted)",
-                  }}
-                >
-                  {used} / {max}
-                </span>
-              </div>
-              <div
-                style={{
-                  height: 6,
-                  background: "var(--bg-hover)",
-                  borderRadius: 99,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${Math.min((used / max) * 100, 100)}%`,
-                    height: "100%",
-                    background:
-                      used >= max
-                        ? "var(--red)"
-                        : used / max > 0.7
-                          ? "var(--amber)"
-                          : "var(--green)",
-                    borderRadius: 99,
-                    transition: "width 0.4s ease",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {/* Quick Actions */}
-      <div className="card mb-4">
-        <div className="card-header">
-          <h3 className="card-title">Quick Actions</h3>
-        </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate("/customers")}
-          >
-            <Plus size={16} /> Add Customer
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/orders")}
-          >
-            <ShoppingBag size={16} /> New Order
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/broadcast")}
-          >
-            <Radio size={16} /> Send Broadcast
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/quick-replies")}
-          >
-            <MessageCircle size={16} /> Quick Replies
-          </button>
-        </div>
-      </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        {/* Recent Orders */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Recent Orders</h3>
-            <Link
-              to="/orders"
-              className="btn btn-ghost btn-sm"
-              style={{ textDecoration: "none" }}
-            >
-              View all <ArrowRight size={14} />
-            </Link>
-          </div>
-          {recentOrders.length === 0 ? (
-            <div className="empty-state" style={{ padding: "30px 0" }}>
-              <p>No orders yet</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {recentOrders.map((order) => {
-                const customer = getCustomer(order.customerId);
-                return (
-                  <div
-                    key={order.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 12px",
-                      background: "var(--bg-surface)",
-                      borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--border)",
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: "0.85rem",
-                          fontWeight: 600,
-                          color: "var(--text-primary)",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {order.item}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--text-muted)",
-                          marginTop: 2,
-                        }}
-                      >
-                        {customer?.name || "Unknown"}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        marginLeft: 8,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          color: "var(--text-primary)",
-                        }}
-                      >
-                        {formatNaira(order.amount)}
-                      </span>
-                      <Badge label={order.status} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Customers */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Recent Customers</h3>
-            <Link
-              to="/customers"
-              className="btn btn-ghost btn-sm"
-              style={{ textDecoration: "none" }}
-            >
-              View all <ArrowRight size={14} />
-            </Link>
-          </div>
-          {recentCustomers.length === 0 ? (
-            <div className="empty-state" style={{ padding: "30px 0" }}>
-              <p>No customers yet</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {recentCustomers.map((c) => (
-                <div
-                  key={c.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "10px 12px",
-                    background: "var(--bg-surface)",
-                    borderRadius: "var(--radius-sm)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <div className="avatar">{c.name.charAt(0)}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {c.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      {c.phone}
-                    </div>
-                  </div>
-                  <Badge label={c.tag} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Main Feed */}
+        <div className="lg:col-span-8 space-y-8">
+           {/* Free Plan Alert */}
+           {store.plan === "free" && (
+             <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-amber-500/20 to-orange-600/10 border border-amber-500/20 p-8 fadeInUp">
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                   <div>
+                      <h4 className="text-xl font-black text-white mb-2">Unlock Infinite Growth</h4>
+                      <p className="text-sm text-amber-100/70 font-medium">You're currently limited to 20 customers. Upgrade to PRO for unlimited potential.</p>
+                   </div>
+                   <button onClick={() => setShowUpgrade(true)} className="btn bg-amber-500 text-black px-8 h-12 font-black shadow-2xl hover:scale-105 transition-transform">
+                     Upgrade To Pro <ChevronRight size={18} />
+                   </button>
                 </div>
-              ))}
-            </div>
-          )}
+                {/* Decorative Pattern */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+             </div>
+           )}
+
+           {/* Performance Table */}
+           <div className="card p-0 overflow-hidden fadeInUp" style={{ animationDelay: '0.1s' }}>
+              <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                 <h3 className="font-black text-lg text-white">Incoming Orders</h3>
+                 <Link to="/orders" className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-1 hover:gap-2 transition-all">
+                    View Ledger <ChevronRight size={14} />
+                 </Link>
+              </div>
+              <div className="table-wrap border-none rounded-none">
+                 <table>
+                   <thead>
+                     <tr>
+                       <th>Item / Service</th>
+                       <th>Customer</th>
+                       <th>Revenue</th>
+                       <th>Workflow</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {recentOrders.map((order) => {
+                       const customer = getCustomer(order.customerId);
+                       return (
+                         <tr key={order.id}>
+                           <td className="font-extrabold text-white">{order.item}</td>
+                           <td className="text-text-secondary font-medium">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 rounded-lg bg-bg-surface border border-white/10 flex items-center justify-center text-[10px] font-black">{customer?.name ? customer.name.charAt(0) : '?'}</div>
+                                 {customer?.name || "Unknown Customer"}
+                              </div>
+                           </td>
+                           <td className="font-black text-white">{formatNaira(order.amount)}</td>
+                           <td><Badge label={order.status} /></td>
+                         </tr>
+                       );
+                     })}
+                     {recentOrders.length === 0 && (
+                       <tr><td colSpan="4" className="text-center py-20 text-text-muted font-bold italic">No active pipelines found.</td></tr>
+                     )}
+                   </tbody>
+                 </table>
+              </div>
+           </div>
+        </div>
+
+        {/* Sidebar Widgets */}
+        <div className="lg:col-span-4 space-y-8 fadeInUp" style={{ animationDelay: '0.2s' }}>
+           {/* Quick Actions */}
+           <div className="card bg-primary/5 border-primary/10">
+              <h3 className="font-black text-sm uppercase tracking-widest text-primary mb-6 flex items-center gap-2">
+                <Zap size={14} className="fill-current" /> Fast Track
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                 <button onClick={() => navigate("/customers")} className="btn btn-secondary text-xs h-12 bg-white/5 border-white/5 hover:bg-white/10">Leads</button>
+                 <button onClick={() => navigate("/quick-replies")} className="btn btn-secondary text-xs h-12 bg-white/5 border-white/5 hover:bg-white/10">Replies</button>
+                 <button onClick={() => navigate("/invoices")} className="btn btn-secondary text-xs h-12 bg-white/5 border-white/5 hover:bg-white/10">Invoice</button>
+                 <button onClick={() => navigate("/broadcast")} className="btn btn-secondary text-xs h-12 bg-white/5 border-white/5 hover:bg-white/10">Blast</button>
+              </div>
+           </div>
+
+           {/* Elite Lead Board */}
+           <div className="card">
+              <div className="flex justify-between items-center mb-8">
+                 <h3 className="font-black text-sm uppercase tracking-widest text-text-muted">Top Prospects</h3>
+                 <Link to="/customers" className="text-text-muted hover:text-white transition-colors"><ArrowRight size={16} /></Link>
+              </div>
+              <div className="space-y-6">
+                 {recentCustomers.map((c) => (
+                   <div key={c.id} className="flex items-center gap-4 group cursor-pointer">
+                      <div className="avatar w-12 h-12 text-sm bg-bg-surface border-white/5 group-hover:border-primary/40 transition-colors">
+                        {c.name ? c.name.charAt(0) : '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                         <div className="text-sm font-black text-white truncate">{c.name || "Untitled Lead"}</div>
+                         <div className="text-xs font-bold text-text-muted">{c.phone || "No Number"}</div>
+                      </div>
+                      <Badge label={c.tag} />
+                   </div>
+                 ))}
+                 {recentCustomers.length === 0 && (
+                   <div className="text-center py-10 text-xs text-text-muted font-bold italic">No leads found.</div>
+                 )}
+              </div>
+           </div>
+
+           {/* System Tip */}
+           <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 text-center">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4">
+                 <TrendingUp size={18} />
+              </div>
+              <p className="text-xs text-text-secondary leading-relaxed font-bold italic opacity-60 px-4">
+                "Targeted broadcasts have a 4x higher conversion rate than generic ones."
+              </p>
+           </div>
         </div>
       </div>
 
-      {/* WhatsApp tip banner */}
-      <div
-        style={{
-          marginTop: 16,
-          background:
-            "linear-gradient(135deg, rgba(37,211,102,0.1), rgba(37,211,102,0.03))",
-          border: "1px solid rgba(37,211,102,0.2)",
-          borderRadius: "var(--radius-lg)",
-          padding: "18px 22px",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <div style={{ fontSize: "1.8rem" }}>💡</div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: 4 }}>
-            Pro Tip
-          </div>
-          <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-            Click any customer's phone number to chat with them instantly on
-            WhatsApp. Use <strong>Quick Replies</strong> to save time with
-            pre-written messages.
-          </div>
-        </div>
-      </div>
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );

@@ -68,8 +68,9 @@ function AppLayout({ children }) {
     setShowOnboarding(false);
   };
 
-  const handleLogout = () => {
-    store.logout();
+  const handleLogout = async () => {
+    await store.signOut();
+    navigate("/");
   };
 
   // Mobile sidebar toggle button visibility
@@ -93,9 +94,11 @@ function AppLayout({ children }) {
         onLogout={handleLogout}
       />
 
-      <div className="main-content">
+      <div className="flex-1 lg:pl-72 transition-all duration-500">
         <TopBar page={path} onMenuClick={() => setSidebar((s) => !s)} />
-        {children}
+        <main className="relative z-0">
+          {children}
+        </main>
       </div>
 
       <ToastContainer toasts={store.toasts} />

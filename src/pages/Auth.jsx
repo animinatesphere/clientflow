@@ -25,7 +25,6 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  // Sync state if initialMode changes (e.g. user clicks direct link)
   useEffect(() => {
     setIsLogin(initialMode === "login");
   }, [initialMode]);
@@ -35,7 +34,6 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
     setError("");
     setLoading(true);
 
-    // Simulate API call
     setTimeout(() => {
       if (isLogin) {
         if (formData.email && formData.password) {
@@ -45,7 +43,7 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
             name: formData.email.split("@")[0],
           });
         } else {
-          setError("Please fill in all fields");
+          setError("Invalid credentials. Please verify your entries.");
           setLoading(false);
         }
       } else {
@@ -56,7 +54,7 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
             setLoading(false);
           }, 1500);
         } else {
-          setError("Please fill in all fields");
+          setError("All profile fields are mandatory.");
           setLoading(false);
         }
       }
@@ -71,135 +69,54 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
   };
 
   return (
-    <div
-      className="lp-root"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
-    >
-      {/* Background elements from LandingPage */}
-      <div className="lp-grid-bg" />
-      <div className="lp-orb lp-orb-1" style={{ width: 400, height: 400 }} />
-      <div className="lp-orb lp-orb-2" style={{ width: 300, height: 300 }} />
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-bg-primary">
+      {/* Visual Ambiance */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div
-        className="lp-anim-in"
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div
-            className="lp-logo-icon"
-            style={{ margin: "0 auto 16px", width: 48, height: 48 }}
-            onClick={() => navigate("/")}
-          >
+      <div className="w-full max-w-md relative z-10 fadeInUp">
+        {/* Branding */}
+        <div className="text-center mb-10 group cursor-pointer" onClick={() => navigate("/")}>
+          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_40px_rgba(37,211,102,0.3)] mx-auto mb-6 transform group-hover:scale-110 transition-transform duration-500">
             <MessageCircle size={28} color="#000" fill="#000" />
           </div>
-          <h1
-            className="lp-logo-text"
-            style={{ fontSize: "1.5rem", cursor: "pointer" }}
-            onClick={() => navigate("/")}
-          >
-            Client<span>Flow</span>
-          </h1>
-          <p
-            style={{
-              fontSize: "0.85rem",
-              color: "var(--text-secondary)",
-              marginTop: 8,
-            }}
-          >
-            Professional WhatsApp CRM for Nigeria 🇳🇬
-          </p>
+          <h1 className="text-2xl font-black text-white tracking-tighter">Client<span className="text-primary">Flow</span></h1>
+          <p className="text-[0.65rem] font-bold text-text-muted uppercase tracking-[0.2em] mt-2">Enterprise Engagement Suite</p>
         </div>
 
-        {/* Card */}
-        <div
-          className="card"
-          style={{
-            padding: 32,
-            borderRadius: 24,
-            boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
-          }}
-        >
+        {/* Dynamic Card */}
+        <div className="card shadow-2xl p-8 md:p-10">
           {success ? (
-            <div style={{ textAlign: "center", padding: "20px 0" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginBottom: 16,
-                }}
-              >
-                <CheckCircle size={56} color="var(--green)" />
+            <div className="text-center py-8">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-6 shadow-glow">
+                <CheckCircle size={40} />
               </div>
-              <h2
-                style={{
-                  fontSize: "1.25rem",
-                  fontWeight: 700,
-                  marginBottom: 8,
-                }}
-              >
-                Account Created!
-              </h2>
-              <p
-                style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}
-              >
-                Welcome to the professional way of selling on WhatsApp.
-                Redirecting you...
+              <h2 className="text-2xl font-black text-white mb-3">Identity Verified</h2>
+              <p className="text-text-secondary font-medium text-sm leading-relaxed mb-8">
+                Your professional profile has been initialized. Synchronizing environment...
               </p>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginTop: 24,
-                }}
-              >
-                <Loader2
-                  className="animate-spin"
-                  size={20}
-                  color="var(--green)"
-                />
-              </div>
+              <Loader2 className="animate-spin mx-auto text-primary" size={24} />
             </div>
           ) : (
             <>
-              <h2
-                style={{
-                  fontSize: "1.25rem",
-                  fontWeight: 700,
-                  marginBottom: 24,
-                }}
-              >
-                {isLogin ? "Welcome Back" : "Create Business Account"}
-              </h2>
+              <div className="mb-8">
+                <h2 className="text-2xl font-black text-center text-white tracking-tight mb-2">
+                  {isLogin ? "Welcome Back" : "Sign Up"}
+                </h2>
+                <p className="text-text-secondary text-sm text-center font-medium tracking-tight">
+                  {isLogin ? "Sign in to access your dashboard." : "Create your high-end business workspace."}
+                </p>
+              </div>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {!isLogin && (
-                  <div className="form-group">
-                    <label className="form-label">Business Name</label>
-                    <div style={{ position: "relative" }}>
-                      <User
-                        style={{
-                          position: "absolute",
-                          left: 12,
-                          top: 12,
-                          color: "var(--text-muted)",
-                        }}
-                        size={16}
-                      />
+                  <div className="space-y-2">
+                    <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1">Business Name</label>
+                    <div className="relative group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                       <input
-                        className="form-input"
-                        style={{ paddingLeft: 40 }}
-                        placeholder="e.g. Ade Graphics"
+                        className="form-input pl-12 h-12 bg-white/[0.02]"
+                        placeholder="e.g. Studio Oladimeji"
                         value={formData.name}
                         onChange={(e) => set("name", e.target.value)}
                         required
@@ -208,23 +125,14 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
                   </div>
                 )}
 
-                <div className="form-group">
-                  <label className="form-label">Email Address</label>
-                  <div style={{ position: "relative" }}>
-                    <Mail
-                      style={{
-                        position: "absolute",
-                        left: 12,
-                        top: 12,
-                        color: "var(--text-muted)",
-                      }}
-                      size={16}
-                    />
+                <div className="space-y-2">
+                  <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1">Email</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                     <input
-                      className="form-input"
-                      style={{ paddingLeft: 40 }}
+                      className="form-input pl-12 h-12 bg-white/[0.02]"
                       type="email"
-                      placeholder="ade@example.com"
+                      placeholder="name@enterprise.com"
                       value={formData.email}
                       onChange={(e) => set("email", e.target.value)}
                       required
@@ -232,21 +140,12 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <div style={{ position: "relative" }}>
-                    <Lock
-                      style={{
-                        position: "absolute",
-                        left: 12,
-                        top: 12,
-                        color: "var(--text-muted)",
-                      }}
-                      size={16}
-                    />
+                <div className="space-y-2">
+                  <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1">Password</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                     <input
-                      className="form-input"
-                      style={{ paddingLeft: 40, paddingRight: 40 }}
+                      className="form-input pl-12 pr-12 h-12 bg-white/[0.02]"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={formData.password}
@@ -256,78 +155,43 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      style={{
-                        position: "absolute",
-                        right: 12,
-                        top: 12,
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--text-muted)",
-                      }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white"
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
 
                 {error && (
-                  <div
-                    style={{
-                      color: "var(--red)",
-                      fontSize: "0.75rem",
-                      marginBottom: 16,
-                      textAlign: "center",
-                    }}
-                  >
+                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center">
                     {error}
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  className="lp-cta-btn"
-                  style={{
-                    width: "100%",
-                    justifyContent: "center",
-                    marginTop: 8,
-                  }}
+                  className="btn btn-primary w-full h-14 text-base shadow-2xl group transition-all"
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loader2 className="animate-spin" size={20} />
+                    <Loader2 className="animate-spin" size={24} />
                   ) : (
                     <>
-                      {isLogin ? "Sign In" : "Create Account"}
-                      <ArrowRight size={18} />
+                      {isLogin ? "Login" : "Sign Up"}
+                      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
-                  <div className="lp-cta-shine" />
                 </button>
               </form>
 
-              <div style={{ textAlign: "center", marginTop: 24 }}>
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  {isLogin
-                    ? "Don't have an account?"
-                    : "Already have an account?"}{" "}
+              <div className="mt-8 pt-8 border-t border-white/5 text-center">
+                <p className="text-sm font-bold text-text-secondary">
+                  {isLogin ? "New to ClientFlow?" : "Already have an account?"}{" "}
                   <button
                     onClick={toggleMode}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--green)",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
+                    className=" text-center text-primary hover:text-white underline underline-offset-4 transition-colors font-black"
                   >
-                    {isLogin ? "Sign Up" : "Log In"}
+                    {isLogin ? "Sign Up" : "Login"}
                   </button>
                 </p>
               </div>
@@ -335,20 +199,14 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
           )}
         </div>
 
-        {/* Footer info */}
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: 32,
-            fontSize: "0.75rem",
-            color: "var(--text-muted)",
-            display: "flex",
-            gap: 16,
-            justifyContent: "center",
-          }}
-        >
-          <span>✓ Secure Encryption</span>
-          <span>✓ Nigerian Powered 🇳🇬</span>
+        {/* Minimal Footer */}
+        <div className="mt-12 flex items-center justify-center gap-8 text-[0.65rem] font-black text-text-muted uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-2 italic">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" /> End-to-End Encrypted
+          </div>
+          <div className="flex items-center gap-2 italic">
+             <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Server Status: Optimal
+          </div>
         </div>
       </div>
     </div>

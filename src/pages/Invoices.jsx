@@ -11,15 +11,19 @@ import {
   Eye,
   X,
   Copy,
+  Receipt,
+  ArrowUpRight,
+  ShieldCheck,
 } from "lucide-react";
 import Modal from "../components/ui/Modal";
 import Badge from "../components/ui/Badge";
 import UpgradeModal from "../components/ui/UpgradeModal";
 import { usePlan } from "../hooks/usePlan";
-const STATUS_COLORS = {
-  unpaid: { color: "var(--amber)", bg: "rgba(245,158,11,0.1)" },
-  paid: { color: "var(--green)", bg: "rgba(37,211,102,0.1)" },
-  overdue: { color: "var(--red)", bg: "rgba(239,68,68,0.1)" },
+
+const STATUS_CONFIG = {
+  unpaid: { color: "var(--amber)", bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.2)", icon: Clock },
+  paid: { color: "var(--green)", bg: "rgba(37,211,102,0.06)", border: "rgba(37,211,102,0.2)", icon: CheckCircle },
+  overdue: { color: "var(--red)", bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.2)", icon: X },
 };
 
 function generateInvoiceNumber(invoices) {
@@ -52,36 +56,23 @@ function InvoiceForm({
   });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
   const setItem = (i, k, v) => {
     const items = [...form.items];
     items[i] = { ...items[i], [k]: v };
     setForm((f) => ({ ...f, items }));
   };
+  const addItem = () => setForm((f) => ({ ...f, items: [...f.items, { description: "", qty: 1, price: "" }] }));
+  const removeItem = (i) => setForm((f) => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }));
 
-  const addItem = () =>
-    setForm((f) => ({
-      ...f,
-      items: [...f.items, { description: "", qty: 1, price: "" }],
-    }));
-
-  const removeItem = (i) =>
-    setForm((f) => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }));
-
-  const subtotal = form.items.reduce(
-    (s, it) => s + (Number(it.qty) * Number(it.price) || 0),
-    0,
-  );
+  const subtotal = form.items.reduce((s, it) => s + (Number(it.qty) * Number(it.price) || 0), 0);
   const discountAmt = (subtotal * Number(form.discount)) / 100;
   const taxAmt = ((subtotal - discountAmt) * Number(form.tax)) / 100;
   const total = subtotal - discountAmt + taxAmt;
 
-  // Pre-fill items from order
   const handleOrderChange = (orderId) => {
     set("orderId", orderId);
     const order = orders.find((o) => o.id === orderId);
     if (order) {
-      set("customerId", order.customerId);
       setForm((f) => ({
         ...f,
         orderId,
@@ -103,593 +94,164 @@ function InvoiceForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
         <div className="form-group">
-          <label className="form-label">Customer *</label>
-          <select
-            className="form-select"
-            value={form.customerId}
-            onChange={(e) => set("customerId", e.target.value)}
-            required
-          >
-            <option value="">Select customer</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Client *</label>
+          <select className="form-select" value={form.customerId} onChange={(e) => set("customerId", e.target.value)} required>
+            <option value="">Choose Source</option>
+            {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div className="form-group">
-          <label className="form-label">Link to Order (optional)</label>
-          <select
-            className="form-select"
-            value={form.orderId}
-            onChange={(e) => handleOrderChange(e.target.value)}
-          >
-            <option value="">None</option>
-            {orders.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.item} — ₦{Number(o.amount).toLocaleString()}
-              </option>
-            ))}
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Link Pipeline</label>
+          <select className="form-select" value={form.orderId} onChange={(e) => handleOrderChange(e.target.value)}>
+            <option value="">Standalone Doc</option>
+            {orders.map((o) => <option key={o.id} value={o.id}>{o.item} (₦{Number(o.amount).toLocaleString()})</option>)}
           </select>
         </div>
       </div>
 
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}
-      >
+      <div className="grid grid-cols-2 gap-4">
         <div className="form-group">
-          <label className="form-label">Your Business Name</label>
-          <input
-            className="form-input"
-            placeholder="Ade Graphics"
-            value={form.businessName}
-            onChange={(e) => set("businessName", e.target.value)}
-          />
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Your Brand Identity</label>
+          <input className="form-input" placeholder="e.g. Studio Ade" value={form.businessName} onChange={(e) => set("businessName", e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="form-label">Business Phone</label>
-          <input
-            className="form-input"
-            placeholder="08012345678"
-            value={form.businessPhone}
-            onChange={(e) => set("businessPhone", e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Due Date</label>
-          <input
-            className="form-input"
-            type="date"
-            value={form.dueDate}
-            onChange={(e) => set("dueDate", e.target.value)}
-          />
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Settlement Deadline</label>
+          <input className="form-input" type="date" value={form.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
         </div>
       </div>
 
-      {/* Line Items */}
       <div className="form-group">
-        <label className="form-label">Items *</label>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Line Items Specification *</label>
+        <div className="space-y-3">
           {form.items.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 60px 100px 32px",
-                gap: 8,
-                alignItems: "center",
-              }}
-            >
-              <input
-                className="form-input"
-                placeholder="Description"
-                value={item.description}
-                onChange={(e) => setItem(i, "description", e.target.value)}
-                required
-              />
-              <input
-                className="form-input"
-                type="number"
-                placeholder="Qty"
-                min="1"
-                value={item.qty}
-                onChange={(e) => setItem(i, "qty", e.target.value)}
-              />
-              <input
-                className="form-input"
-                type="number"
-                placeholder="Price ₦"
-                min="0"
-                value={item.price}
-                onChange={(e) => setItem(i, "price", e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => removeItem(i)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--red)",
-                  padding: 4,
-                }}
-              >
+            <div key={i} className="flex gap-3 items-start">
+              <div className="flex-1">
+                 <input className="form-input text-xs" placeholder="Service entry" value={item.description} onChange={(e) => setItem(i, "description", e.target.value)} required />
+              </div>
+              <div className="w-16">
+                 <input className="form-input text-xs text-center" type="number" min="1" value={item.qty} onChange={(e) => setItem(i, "qty", e.target.value)} />
+              </div>
+              <div className="w-24">
+                 <input className="form-input text-xs" type="number" placeholder="₦" value={item.price} onChange={(e) => setItem(i, "price", e.target.value)} required />
+              </div>
+              <button type="button" onClick={() => removeItem(i)} className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-lg transition-colors mt-0.5">
                 <X size={14} />
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={addItem}
-            style={{ alignSelf: "flex-start" }}
-          >
-            <Plus size={14} /> Add Line Item
+          <button type="button" className="text-[0.65rem] font-black uppercase tracking-widest text-primary hover:text-white transition-colors" onClick={addItem}>
+            + Add Line Specification
           </button>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <div className="form-group">
-          <label className="form-label">Discount (%)</label>
-          <input
-            className="form-input"
-            type="number"
-            min="0"
-            max="100"
-            value={form.discount}
-            onChange={(e) => set("discount", e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">VAT / Tax (%)</label>
-          <input
-            className="form-input"
-            type="number"
-            min="0"
-            max="100"
-            value={form.tax}
-            onChange={(e) => set("tax", e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Totals Preview */}
-      <div
-        style={{
-          background: "var(--bg-surface)",
-          borderRadius: "var(--radius-sm)",
-          padding: "12px 16px",
-          marginBottom: 16,
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "0.8rem",
-            color: "var(--text-muted)",
-            marginBottom: 4,
-          }}
-        >
-          <span>Subtotal</span>
-          <span>₦{subtotal.toLocaleString("en-NG")}</span>
+      <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 space-y-3">
+        <div className="flex justify-between text-xs font-bold text-text-secondary">
+          <span>Contract Subtotal</span>
+          <span>₦{subtotal.toLocaleString()}</span>
         </div>
         {form.discount > 0 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.8rem",
-              color: "var(--red)",
-              marginBottom: 4,
-            }}
-          >
-            <span>Discount ({form.discount}%)</span>
-            <span>-₦{discountAmt.toLocaleString("en-NG")}</span>
+          <div className="flex justify-between text-xs font-black text-red-400">
+            <span>Client Discount ({form.discount}%)</span>
+            <span>-₦{discountAmt.toLocaleString()}</span>
           </div>
         )}
-        {form.tax > 0 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.8rem",
-              color: "var(--text-muted)",
-              marginBottom: 4,
-            }}
-          >
-            <span>Tax ({form.tax}%)</span>
-            <span>₦{taxAmt.toLocaleString("en-NG")}</span>
-          </div>
-        )}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontWeight: 700,
-            fontSize: "0.95rem",
-            borderTop: "1px solid var(--border)",
-            paddingTop: 8,
-            marginTop: 4,
-          }}
-        >
-          <span>Total</span>
-          <span style={{ color: "var(--green)" }}>
-            ₦{total.toLocaleString("en-NG")}
-          </span>
+        <div className="h-px bg-white/5 my-2" />
+        <div className="flex justify-between">
+          <span className="text-sm font-black text-white">Project Valuation</span>
+          <span className="text-xl font-black text-primary tracking-tighter">₦{total.toLocaleString()}</span>
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Notes (optional)</label>
-        <textarea
-          className="form-textarea"
-          placeholder="e.g. Payment via bank transfer to GTBank 0123456789"
-          value={form.notes}
-          onChange={(e) => set("notes", e.target.value)}
-        />
-      </div>
-
-      <div className="modal-footer">
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>
-          Cancel
-        </button>
-        <button type="submit" className="btn btn-primary">
-          <FileText size={15} /> Create Invoice
-        </button>
+      <div className="flex gap-3 pt-4">
+        <button type="button" className="btn btn-secondary flex-1" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn btn-primary flex-1">Issue Document</button>
       </div>
     </form>
   );
 }
 
-function InvoicePreview({ invoice, customer, onMarkPaid }) {
+function InvoicePreview({ invoice, customer, onMarkPaid, formatNaira }) {
   const handlePrint = () => window.print();
-
   const handleCopyLink = () => {
-    const text = `
-*INVOICE ${invoice.invoiceNumber}*
-${invoice.businessName || "My Business"}
-────────────────────
-Customer: ${customer?.name}
-Date: ${new Date(invoice.createdAt).toLocaleDateString("en-NG")}
-${invoice.dueDate ? `Due: ${new Date(invoice.dueDate).toLocaleDateString("en-NG")}` : ""}
-────────────────────
-${invoice.items.map((i) => `• ${i.description} x${i.qty} = ₦${(Number(i.qty) * Number(i.price)).toLocaleString("en-NG")}`).join("\n")}
-────────────────────
-${invoice.discount > 0 ? `Discount: -${invoice.discount}%\n` : ""}TOTAL: ₦${Number(invoice.total).toLocaleString("en-NG")}
-────────────────────
-${invoice.notes || ""}
-    `.trim();
+    const text = `📄 *OFFICIAL INVOICE ${invoice.invoiceNumber}*\nFrom: *${invoice.businessName || "Service Provider"}*\nClient: *${customer?.name}*\nDate: ${new Date(invoice.createdAt).toLocaleDateString()}\nTotal Due: *₦${Number(invoice.total).toLocaleString()}*\n----------------------------------------\nGenerated via ClientFlow CRM`.trim();
     navigator.clipboard.writeText(text);
   };
 
-  const statusStyle = STATUS_COLORS[invoice.status] || STATUS_COLORS.unpaid;
-
   return (
-    <div>
-      {/* Invoice Card */}
-      <div
-        id="invoice-print"
-        style={{
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius-md)",
-          padding: 28,
-          marginBottom: 20,
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 24,
-          }}
-        >
+    <div className="fadeInUp">
+      <div id="invoice-doc" className="bg-white text-black p-12 md:p-20 rounded-[2.5rem] shadow-3xl mb-8 relative overflow-hidden">
+        {/* Subtle Watermark */}
+        <div className="absolute top-10 right-10 opacity-[0.03] select-none pointer-events-none transform rotate-[-15deg]">
+          <Receipt size={300} />
+        </div>
+
+        <div className="flex justify-between items-start mb-16 relative z-10">
           <div>
-            <h2
-              style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: 4 }}
-            >
-              {invoice.businessName || "My Business"}
-            </h2>
-            {invoice.businessPhone && (
-              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                {invoice.businessPhone}
-              </div>
-            )}
+            <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase">{invoice.businessName || "MY BRAND"}</h1>
+            <p className="text-gray-400 text-[0.65rem] font-bold uppercase tracking-[0.2em]">Transaction Record</p>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div
-              style={{
-                fontSize: "1.1rem",
-                fontWeight: 700,
-                color: "var(--green)",
-              }}
-            >
-              {invoice.invoiceNumber}
-            </div>
-            <div
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--text-muted)",
-                marginTop: 2,
-              }}
-            >
-              {new Date(invoice.createdAt).toLocaleDateString("en-NG", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                marginTop: 6,
-                padding: "2px 10px",
-                borderRadius: 99,
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                color: statusStyle.color,
-                background: statusStyle.bg,
-              }}
-            >
-              {invoice.status.toUpperCase()}
-            </div>
+          <div className="text-right">
+            <h2 className="text-xl font-black text-primary leading-none mb-1">{invoice.invoiceNumber}</h2>
+            <p className="text-gray-400 text-[0.65rem] font-bold uppercase tracking-widest">{new Date(invoice.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
 
-        {/* Bill To */}
-        <div
-          style={{
-            marginBottom: 20,
-            padding: "12px 14px",
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-sm)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.65rem",
-              fontWeight: 700,
-              color: "var(--text-muted)",
-              marginBottom: 4,
-              textTransform: "uppercase",
-            }}
-          >
-            Bill To
+        <div className="grid grid-cols-2 gap-12 mb-16 relative z-10">
+          <div>
+            <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-4">Billed To Identity</p>
+            <p className="text-lg font-black">{customer?.name}</p>
+            <p className="text-sm font-medium text-gray-500 mt-1">{customer?.phone}</p>
           </div>
-          <div style={{ fontWeight: 700 }}>{customer?.name}</div>
-          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-            {customer?.phone}
+          <div className="text-right">
+            <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-4">Maturity Date</p>
+            <p className="text-lg font-black">{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'Immediate'}</p>
           </div>
         </div>
 
-        {/* Items Table */}
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginBottom: 16,
-          }}
-        >
+        <table className="w-full mb-12 relative z-10">
           <thead>
-            <tr style={{ borderBottom: "2px solid var(--border)" }}>
-              <th
-                style={{
-                  textAlign: "left",
-                  padding: "8px 0",
-                  fontSize: "0.75rem",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                }}
-              >
-                DESCRIPTION
-              </th>
-              <th
-                style={{
-                  textAlign: "center",
-                  padding: "8px 0",
-                  fontSize: "0.75rem",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                }}
-              >
-                QTY
-              </th>
-              <th
-                style={{
-                  textAlign: "right",
-                  padding: "8px 0",
-                  fontSize: "0.75rem",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                }}
-              >
-                PRICE
-              </th>
-              <th
-                style={{
-                  textAlign: "right",
-                  padding: "8px 0",
-                  fontSize: "0.75rem",
-                  color: "var(--text-muted)",
-                  fontWeight: 600,
-                }}
-              >
-                TOTAL
-              </th>
+            <tr className="border-b-2 border-black">
+              <th className="bg-transparent border-none text-left p-4 text-[0.65rem] text-gray-400 font-black">DESCRIPTION</th>
+              <th className="bg-transparent border-none text-center p-4 text-[0.65rem] text-gray-400 font-black">QTY</th>
+              <th className="bg-transparent border-none text-right p-4 text-[0.65rem] text-gray-400 font-black">UNIT</th>
+              <th className="bg-transparent border-none text-right p-4 text-[0.65rem] text-gray-400 font-black">TOTAL</th>
             </tr>
           </thead>
           <tbody>
             {invoice.items.map((item, i) => (
-              <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
-                <td style={{ padding: "10px 0", fontSize: "0.875rem" }}>
-                  {item.description}
-                </td>
-                <td
-                  style={{
-                    padding: "10px 0",
-                    textAlign: "center",
-                    fontSize: "0.875rem",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  {item.qty}
-                </td>
-                <td
-                  style={{
-                    padding: "10px 0",
-                    textAlign: "right",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  ₦{Number(item.price).toLocaleString("en-NG")}
-                </td>
-                <td
-                  style={{
-                    padding: "10px 0",
-                    textAlign: "right",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  ₦
-                  {(Number(item.qty) * Number(item.price)).toLocaleString(
-                    "en-NG",
-                  )}
-                </td>
+              <tr key={i} className="border-b border-gray-100 italic">
+                <td className="p-4 font-bold text-sm text-gray-800">{item.description}</td>
+                <td className="p-4 text-center font-bold text-sm text-gray-500">{item.qty}</td>
+                <td className="p-4 text-right font-bold text-sm text-gray-800">₦{Number(item.price).toLocaleString()}</td>
+                <td className="p-4 text-right font-black text-sm text-black">₦{(Number(item.qty) * Number(item.price)).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Totals */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: 4,
-            marginBottom: 16,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              gap: 40,
-              fontSize: "0.8rem",
-              color: "var(--text-muted)",
-            }}
-          >
-            <span>Subtotal</span>
-            <span>₦{Number(invoice.subtotal).toLocaleString("en-NG")}</span>
-          </div>
-          {invoice.discount > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 40,
-                fontSize: "0.8rem",
-                color: "var(--red)",
-              }}
-            >
-              <span>Discount ({invoice.discount}%)</span>
-              <span>
-                -₦
-                {((invoice.subtotal * invoice.discount) / 100).toLocaleString(
-                  "en-NG",
-                )}
-              </span>
-            </div>
-          )}
-          {invoice.tax > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 40,
-                fontSize: "0.8rem",
-                color: "var(--text-muted)",
-              }}
-            >
-              <span>Tax ({invoice.tax}%)</span>
-              <span>
-                ₦
-                {(
-                  ((invoice.subtotal -
-                    (invoice.subtotal * invoice.discount) / 100) *
-                    invoice.tax) /
-                  100
-                ).toLocaleString("en-NG")}
-              </span>
-            </div>
-          )}
-          <div
-            style={{
-              display: "flex",
-              gap: 40,
-              fontWeight: 800,
-              fontSize: "1.05rem",
-              borderTop: "2px solid var(--border)",
-              paddingTop: 8,
-              marginTop: 4,
-            }}
-          >
-            <span>TOTAL</span>
-            <span style={{ color: "var(--green)" }}>
-              ₦{Number(invoice.total).toLocaleString("en-NG")}
-            </span>
-          </div>
+        <div className="ml-auto max-w-[300px] relative z-10">
+           <div className="flex justify-between items-center mb-2 font-bold text-sm text-gray-500">
+             <span>Gross Sum</span>
+             <span>₦{Number(invoice.subtotal).toLocaleString()}</span>
+           </div>
+           {invoice.discount > 0 && <div className="flex justify-between items-center mb-2 font-black text-sm text-red-500"><span>Client Discount</span><span>-₦{((invoice.subtotal * invoice.discount)/100).toLocaleString()}</span></div>}
+           <div className="h-px bg-black my-4" />
+           <div className="flex justify-between items-center">
+             <span className="font-black text-lg">FINAL DUE</span>
+             <span className="font-black text-2xl text-primary tracking-tighter">₦{Number(invoice.total).toLocaleString()}</span>
+           </div>
         </div>
-
-        {/* Notes */}
-        {invoice.notes && (
-          <div
-            style={{
-              padding: "10px 14px",
-              background: "var(--bg-surface)",
-              borderRadius: "var(--radius-sm)",
-              fontSize: "0.8rem",
-              color: "var(--text-secondary)",
-              borderLeft: "3px solid var(--green)",
-            }}
-          >
-            {invoice.notes}
-          </div>
-        )}
       </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button
-          className="btn btn-secondary"
-          style={{ flex: 1, justifyContent: "center" }}
-          onClick={handleCopyLink}
-        >
-          <Copy size={14} /> Copy for WhatsApp
-        </button>
-        <button
-          className="btn btn-secondary"
-          style={{ flex: 1, justifyContent: "center" }}
-          onClick={handlePrint}
-        >
-          <Download size={14} /> Print / Save PDF
-        </button>
-        {invoice.status === "unpaid" && (
-          <button
-            className="btn btn-primary"
-            style={{ flex: 1, justifyContent: "center" }}
-            onClick={() => onMarkPaid(invoice.id)}
-          >
-            <CheckCircle size={14} /> Mark as Paid
-          </button>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <button className="btn btn-secondary h-14" onClick={handleCopyLink}>Copy Lead Link</button>
+        <button className="btn btn-secondary h-14" onClick={handlePrint}>Download as PDF</button>
+        {invoice.status === 'unpaid' && (
+           <button className="btn btn-primary h-14" onClick={() => onMarkPaid(invoice.id)}>Confirm Collection</button>
         )}
       </div>
     </div>
@@ -697,365 +259,149 @@ ${invoice.notes || ""}
 }
 
 export default function Invoices({ store }) {
-  const {
-    invoices,
-    customers,
-    orders,
-    addInvoice,
-    updateInvoice,
-    deleteInvoice,
-    getCustomer,
-    formatNaira,
-  } = store;
+  const { invoices, customers, orders, addInvoice, updateInvoice, deleteInvoice, getCustomer, formatNaira } = store;
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("all");
   const { upgradeModal, upgradeReason, setUpgradeModal, gate } = usePlan(store);
-  const filtered =
-    filter === "all" ? invoices : invoices.filter((i) => i.status === filter);
 
-  const totalUnpaid = invoices
-    .filter((i) => i.status === "unpaid")
-    .reduce((s, i) => s + Number(i.total), 0);
-
-  const totalPaid = invoices
-    .filter((i) => i.status === "paid")
-    .reduce((s, i) => s + Number(i.total), 0);
+  const filtered = filter === "all" ? invoices : invoices.filter((i) => i.status === filter);
+  const unpaidVal = invoices.filter(i => i.status === 'unpaid').reduce((s, i) => s + Number(i.total), 0);
+  const paidVal = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.total), 0);
 
   const handleMarkPaid = (id) => {
     updateInvoice(id, { status: "paid", paidAt: new Date().toISOString() });
     setModal(null);
-    store.toast("Invoice marked as paid!", "success");
+    store.toast("Settlement Locked ✅", "success");
   };
 
   return (
-    <div className="page-content">
+    <div className="p-6 lg:p-12 mt-20">
       {/* Header */}
-      <div
-        className="flex items-center justify-between mb-4"
-        style={{ flexWrap: "wrap", gap: 12 }}
-      >
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>
-            Invoices & Receipts
-          </h2>
-          <p
-            style={{
-              fontSize: "0.8rem",
-              color: "var(--text-muted)",
-              marginTop: 2,
-            }}
-          >
-            {invoices.length} total ·{" "}
-            {invoices.filter((i) => i.status === "unpaid").length} unpaid
-          </p>
+          <h1 className="text-3xl font-black text-white tracking-tighter mb-2">Billing Center</h1>
+          <p className="text-text-secondary font-medium tracking-tight">Managing <span className="text-primary font-black">{invoices.length}</span> issued documents.</p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            if (
-              gate(
-                "invoice",
-                `Free plan includes 3 invoices. Upgrade to create unlimited invoices.`,
-              )
-            )
-              setModal("add");
-          }}
-        >
-          <Plus size={16} /> New Invoice
+        <button className="btn btn-primary h-12 shadow-xl" onClick={() => {
+           if (gate("invoice", "Invoicing is a Pro feature. Upgrade to issue unlimited documents.")) setModal("add");
+        }}>
+          <Plus size={18} /> Generate New Document
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-          gap: 12,
-          marginBottom: 20,
-        }}
-      >
-        <div
-          className="stat-card"
-          style={{
-            "--accent": "var(--amber)",
-            "--icon-bg": "rgba(245,158,11,0.12)",
-          }}
-        >
-          <div className="stat-card-icon">
-            <Clock size={20} color="var(--amber)" />
-          </div>
-          <div className="stat-card-value" style={{ color: "var(--amber)" }}>
-            ₦{totalUnpaid.toLocaleString("en-NG")}
-          </div>
-          <div className="stat-card-label">Unpaid</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="card group">
+            <div className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-text-muted mb-2">Uncollected Revenue</div>
+            <div className="text-3xl font-black text-amber-500 tracking-tighter">₦{unpaidVal.toLocaleString()}</div>
         </div>
-        <div
-          className="stat-card"
-          style={{
-            "--accent": "var(--green)",
-            "--icon-bg": "rgba(37,211,102,0.12)",
-          }}
-        >
-          <div className="stat-card-icon">
-            <CheckCircle size={20} color="var(--green)" />
-          </div>
-          <div className="stat-card-value" style={{ color: "var(--green)" }}>
-            ₦{totalPaid.toLocaleString("en-NG")}
-          </div>
-          <div className="stat-card-label">Collected</div>
+        <div className="card group">
+            <div className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-text-muted mb-2">Verified Revenue</div>
+            <div className="text-3xl font-black text-primary tracking-tighter">₦{paidVal.toLocaleString()}</div>
         </div>
-        <div
-          className="stat-card"
-          style={{
-            "--accent": "var(--blue)",
-            "--icon-bg": "rgba(59,130,246,0.12)",
-          }}
-        >
-          <div className="stat-card-icon">
-            <FileText size={20} color="var(--blue)" />
-          </div>
-          <div className="stat-card-value" style={{ color: "var(--blue)" }}>
-            {invoices.length}
-          </div>
-          <div className="stat-card-label">Total Invoices</div>
+        <div className="card group">
+            <div className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-text-muted mb-2">Total Documents</div>
+            <div className="text-3xl font-black text-white tracking-tighter">{invoices.length}</div>
+        </div>
+        <div className="card border-primary/20 bg-primary/5 flex items-center justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+              <ShieldCheck size={24} />
+            </div>
+            <div className="text-right">
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-primary/60">System Status</div>
+              <div className="text-xs font-black text-white uppercase tracking-widest">Compliant</div>
+            </div>
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="filter-row" style={{ marginBottom: 16 }}>
-        {["all", "unpaid", "paid", "overdue"].map((f) => (
-          <button
-            key={f}
-            className={`filter-chip ${filter === f ? "active" : ""}`}
-            onClick={() => setFilter(f)}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
+      {/* Table Section */}
+      <div className="card p-0 overflow-hidden shadow-2xl transition-all duration-500">
+        <div className="flex border-b border-white/5 bg-white/[0.01]">
+           {["all", "unpaid", "paid"].map(f => (
+             <button key={f} className={`px-8 py-5 text-[0.65rem] font-black uppercase tracking-[0.2em] transition-all relative ${filter === f ? 'text-primary' : 'text-text-muted hover:text-text-secondary'}`} onClick={() => setFilter(f)}>
+               {f}
+               {filter === f && <div className="absolute bottom-0 left-8 right-8 h-1 bg-primary rounded-full shadow-[0_0_10px_rgba(37,211,102,1)]" />}
+             </button>
+           ))}
+        </div>
+        <div className="table-wrap border-none rounded-none">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th>Document ID</th>
+                <th>Client Identity</th>
+                <th>Phase Valuation</th>
+                <th>System Status</th>
+                <th className="text-right">Management</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(inv => {
+                const client = getCustomer(inv.customerId);
+                const config = STATUS_CONFIG[inv.status];
+                return (
+                  <tr key={inv.id} className="group italic border-b border-white/[0.03] last:border-none">
+                    <td className="font-extrabold text-primary text-sm tracking-tight">{inv.invoiceNumber}</td>
+                    <td className="font-black text-white">{client?.name || 'Unknown Client'}</td>
+                    <td className="font-extrabold text-white">{formatNaira(inv.total)}</td>
+                    <td>
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[0.65rem] font-black uppercase tracking-widest border" style={{ color: config.color, background: config.bg, borderColor: config.border }}>
+                          <config.icon size={12} />
+                          {inv.status}
+                        </span>
+                    </td>
+                    <td className="text-right">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <button className="w-10 h-10 rounded-lg flex items-center justify-center text-text-muted hover:bg-white/5 hover:text-white transition-all" onClick={() => setModal({ view: inv })}><Eye size={16} /></button>
+                           <button className="w-10 h-10 rounded-lg flex items-center justify-center text-text-muted hover:bg-white/5 hover:text-white transition-all" onClick={() => setModal({ edit: inv })}><Pencil size={16} /></button>
+                           <button className="w-10 h-10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/10 transition-all" onClick={() => setModal({ del: inv })}><Trash2 size={16} /></button>
+                        </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* List */}
-      {filtered.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div className="empty-state-icon">🧾</div>
-            <h3>No invoices yet</h3>
-            <p>
-              Create your first invoice to start getting paid professionally
-            </p>
-            <button
-              className="btn btn-primary"
-              style={{ marginTop: 16 }}
-              onClick={() => setModal("add")}
-            >
-              <Plus size={16} /> New Invoice
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="card" style={{ padding: 0 }}>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Invoice #</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv) => {
-                  const customer = getCustomer(inv.customerId);
-                  const statusStyle =
-                    STATUS_COLORS[inv.status] || STATUS_COLORS.unpaid;
-                  return (
-                    <tr key={inv.id}>
-                      <td>
-                        <span
-                          style={{
-                            fontWeight: 700,
-                            color: "var(--green)",
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          {inv.invoiceNumber}
-                        </span>
-                      </td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <div
-                            className="avatar"
-                            style={{
-                              width: 28,
-                              height: 28,
-                              fontSize: "0.7rem",
-                            }}
-                          >
-                            {customer?.name?.charAt(0) || "?"}
-                          </div>
-                          <span
-                            style={{ fontSize: "0.875rem", fontWeight: 600 }}
-                          >
-                            {customer?.name || "Unknown"}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ fontWeight: 700 }}>
-                        ₦{Number(inv.total).toLocaleString("en-NG")}
-                      </td>
-                      <td>
-                        <span
-                          style={{
-                            padding: "3px 10px",
-                            borderRadius: 99,
-                            fontSize: "0.72rem",
-                            fontWeight: 700,
-                            color: statusStyle.color,
-                            background: statusStyle.bg,
-                          }}
-                        >
-                          {inv.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "var(--text-muted)",
-                        }}
-                      >
-                        {new Date(inv.createdAt).toLocaleDateString("en-NG", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="btn btn-ghost btn-icon btn-sm"
-                            title="View"
-                            onClick={() => setModal({ view: inv })}
-                          >
-                            <Eye size={14} />
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-icon btn-sm"
-                            title="Edit"
-                            onClick={() => setModal({ edit: inv })}
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-icon btn-sm"
-                            title="Delete"
-                            style={{ color: "var(--red)" }}
-                            onClick={() => setModal({ del: inv })}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Add Modal */}
+      {/* Modals Mapping */}
       {modal === "add" && (
-        <Modal title="Create Invoice" onClose={() => setModal(null)}>
-          <InvoiceForm
-            customers={customers}
-            orders={orders}
-            invoices={invoices}
-            onSave={(data) => {
-              addInvoice(data);
-              setModal(null);
-            }}
-            onCancel={() => setModal(null)}
-          />
+        <Modal title="Generate Core Document" onClose={() => setModal(null)}>
+          <InvoiceForm customers={customers} orders={orders} invoices={invoices} onSave={(data) => { addInvoice(data); setModal(null); }} onCancel={() => setModal(null)} />
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {modal?.edit && (
-        <Modal title="Edit Invoice" onClose={() => setModal(null)}>
-          <InvoiceForm
-            initial={modal.edit}
-            customers={customers}
-            orders={orders}
-            invoices={invoices}
-            onSave={(data) => {
-              updateInvoice(modal.edit.id, data);
-              setModal(null);
-            }}
-            onCancel={() => setModal(null)}
-          />
+        <Modal title="Modify Legal Data" onClose={() => setModal(null)}>
+          <InvoiceForm initial={modal.edit} customers={customers} orders={orders} invoices={invoices} onSave={(data) => { updateInvoice(modal.edit.id, data); setModal(null); }} onCancel={() => setModal(null)} />
         </Modal>
       )}
 
-      {/* View Modal */}
       {modal?.view && (
-        <Modal
-          title={`Invoice ${modal.view.invoiceNumber}`}
-          onClose={() => setModal(null)}
-        >
-          <InvoicePreview
-            invoice={modal.view}
-            customer={getCustomer(modal.view.customerId)}
-            onClose={() => setModal(null)}
-            onMarkPaid={handleMarkPaid}
-            formatNaira={formatNaira}
-          />
+        <Modal title={modal.view.invoiceNumber} onClose={() => setModal(null)}>
+          <InvoicePreview invoice={modal.view} customer={getCustomer(modal.view.customerId)} onMarkPaid={handleMarkPaid} formatNaira={formatNaira} />
         </Modal>
       )}
 
-      {/* Delete Modal */}
       {modal?.del && (
-        <Modal title="Delete Invoice?" onClose={() => setModal(null)}>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-            Delete invoice{" "}
-            <strong style={{ color: "var(--text-primary)" }}>
-              {modal.del.invoiceNumber}
-            </strong>
-            ? This cannot be undone.
-          </p>
-          <div className="modal-footer">
-            <button
-              className="btn btn-secondary"
-              onClick={() => setModal(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-danger"
-              onClick={() => {
-                deleteInvoice(modal.del.id);
-                setModal(null);
-              }}
-            >
-              <Trash2 size={14} /> Delete
-            </button>
+        <Modal title="Void Transaction?" onClose={() => setModal(null)}>
+          <div className="text-center p-4">
+             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+                <Trash2 size={32} />
+             </div>
+             <p className="text-base text-text-secondary font-medium leading-relaxed mb-8 px-6">
+               Are you certain you want to void document <strong className="text-white">{modal.del.invoiceNumber}</strong>? This cannot be undone.
+             </p>
+             <div className="flex gap-3">
+               <button className="btn btn-secondary flex-1" onClick={() => setModal(null)}>Retain Record</button>
+               <button className="btn btn-danger flex-1" onClick={() => { deleteInvoice(modal.del.id); setModal(null); }}>Void permanently</button>
+             </div>
           </div>
         </Modal>
       )}
-      {upgradeModal && (
-        <UpgradeModal
-          reason={upgradeReason}
-          onClose={() => setUpgradeModal(false)}
-        />
-      )}
+
+      {upgradeModal && <UpgradeModal reason={upgradeReason} onClose={() => setUpgradeModal(false)} />}
     </div>
   );
 }

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Plus, Copy, Trash2, Pencil, ExternalLink, Check } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  Copy,
+  MessageSquare,
+  Zap,
+} from "lucide-react";
 import Modal from "../components/ui/Modal";
 import UpgradeModal from "../components/ui/UpgradeModal";
 import { usePlan } from "../hooks/usePlan";
@@ -7,280 +15,160 @@ import { usePlan } from "../hooks/usePlan";
 function ReplyForm({ initial = {}, onSave, onCancel }) {
   const [form, setForm] = useState({
     title: initial.title || "",
-    message: initial.message || "",
+    content: initial.content || "",
   });
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.message.trim()) return;
+    if (!form.title.trim() || !form.content.trim()) return;
     onSave(form);
   };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label className="form-label">Reply Title *</label>
-        <input
-          className="form-input"
-          placeholder="e.g. Order Confirmation"
-          value={form.title}
-          onChange={(e) => set("title", e.target.value)}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Message *</label>
-        <textarea
-          className="form-textarea"
-          placeholder="Write your quick reply here..."
-          value={form.message}
-          onChange={(e) => set("message", e.target.value)}
-          required
-          style={{ minHeight: 120 }}
-        />
-        <div
-          style={{
-            fontSize: "0.72rem",
-            color: "var(--text-muted)",
-            marginTop: 4,
-          }}
-        >
-          {form.message.length} characters · Use [Name], [Amount], [Item] as
-          placeholders
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="form-group">
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Shortkey / Title *</label>
+          <input
+            className="form-input"
+            placeholder="e.g. Welcome Message"
+            value={form.title}
+            onChange={(e) => set("title", e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label className="text-[0.65rem] font-black uppercase tracking-widest text-text-secondary ml-1 mb-2 block">Message Content *</label>
+          <textarea
+            className="form-textarea min-h-[160px]"
+            placeholder="What should be sent to the customer..."
+            value={form.content}
+            onChange={(e) => set("content", e.target.value)}
+            required
+          />
         </div>
       </div>
-      <div className="modal-footer">
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>
+      <div className="flex gap-3 pt-4">
+        <button type="button" className="btn btn-secondary flex-1" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn btn-primary">
-          Save Reply
+        <button type="submit" className="btn btn-primary flex-1">
+          Save Quick Reply
         </button>
       </div>
     </form>
   );
 }
 
-function ReplyCard({ reply, onCopy, onEdit, onDelete, copied }) {
-  return (
-    <div
-      className="card"
-      style={{ marginBottom: 12, transition: "transform 0.2s ease" }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.transform = "translateY(-2px)")
-      }
-      onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-    >
-      <div className="card-header" style={{ marginBottom: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "rgba(37,211,102,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.9rem",
-            }}
-          >
-            💬
-          </div>
-          <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>
-            {reply.title}
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button
-            className="btn btn-ghost btn-icon btn-sm"
-            title="Edit"
-            onClick={() => onEdit(reply)}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            className="btn btn-ghost btn-icon btn-sm"
-            title="Delete"
-            style={{ color: "var(--red)" }}
-            onClick={() => onDelete(reply)}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
-
-      <p
-        style={{
-          fontSize: "0.85rem",
-          color: "var(--text-secondary)",
-          lineHeight: 1.65,
-          background: "var(--bg-surface)",
-          borderRadius: "var(--radius-sm)",
-          padding: "12px 14px",
-          borderLeft: "3px solid rgba(37,211,102,0.3)",
-          marginBottom: 12,
-        }}
-      >
-        {reply.message}
-      </p>
-
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={() => onCopy(reply)}
-          style={{ flex: 1, justifyContent: "center" }}
-        >
-          {copied === reply.id ? (
-            <>
-              <Check size={13} style={{ color: "var(--green)" }} /> Copied!
-            </>
-          ) : (
-            <>
-              <Copy size={13} /> Copy
-            </>
-          )}
-        </button>
-        <a
-          href={`https://wa.me/?text=${encodeURIComponent(reply.message)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-secondary btn-sm"
-          style={{ flex: 1, justifyContent: "center", textDecoration: "none" }}
-        >
-          <ExternalLink size={13} /> Open WhatsApp
-        </a>
-      </div>
-    </div>
-  );
-}
-
 export default function QuickReplies({ store }) {
-  const { replies, addReply, updateReply, deleteReply, toast } = store;
-  const [modal, setModal] = useState(null);
-  const [copied, setCopied] = useState(null);
+  const { replies, addReply, updateReply, deleteReply } = store;
   const { upgradeModal, upgradeReason, setUpgradeModal, gate } = usePlan(store);
+  const [search, setSearch] = useState("");
+  const [modal, setModal] = useState(null);
 
-  const handleCopy = (reply) => {
-    navigator.clipboard.writeText(reply.message).then(() => {
-      setCopied(reply.id);
-      toast("Message copied to clipboard");
-      setTimeout(() => setCopied(null), 2000);
-    });
+  const filtered = replies.filter((r) => {
+    if (!r) return false;
+    const title = r.title || "";
+    const content = r.content || "";
+    return (
+      title.toLowerCase().includes(search.toLowerCase()) ||
+      content.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    store.toast("Message copied to clipboard ✅");
   };
 
   return (
-    <div className="page-content">
+    <div className="p-6 lg:p-12 mt-20">
       {/* Header */}
-      <div
-        className="flex items-center justify-between mb-4"
-        style={{ flexWrap: "wrap", gap: 12 }}
-      >
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
         <div>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>
-            Quick Replies
-          </h2>
-          <p
-            style={{
-              fontSize: "0.8rem",
-              color: "var(--text-muted)",
-              marginTop: 2,
-            }}
-          >
-            Pre-written messages to save time
+          <h1 className="text-3xl font-black text-white tracking-tighter mb-2">Knowledge Base</h1>
+          <p className="text-text-secondary font-medium tracking-tight">
+            Storing <span className="text-primary font-black">{replies.length}</span> standardized transmission blocks.
           </p>
         </div>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary h-12 shadow-xl"
           onClick={() => {
-            if (
-              gate(
-                "reply",
-                `Free plan includes 5 quick replies. Upgrade for unlimited replies.`,
-              )
-            )
+            if (gate("reply", `Upgrade for unlimited quick replies.`))
               setModal("add");
           }}
         >
-          <Plus size={16} /> New Reply
+          <Plus size={18} /> New Transmission Block
         </button>
       </div>
 
-      {/* Tip */}
-      <div
-        style={{
-          background: "rgba(37,211,102,0.06)",
-          border: "1px solid rgba(37,211,102,0.15)",
-          borderRadius: "var(--radius-md)",
-          padding: "12px 16px",
-          fontSize: "0.8rem",
-          color: "var(--text-secondary)",
-          marginBottom: 20,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <span>💡</span>
-        <span>
-          Click <strong style={{ color: "var(--text-primary)" }}>Copy</strong>{" "}
-          to copy a message, or{" "}
-          <strong style={{ color: "var(--text-primary)" }}>
-            Open WhatsApp
-          </strong>{" "}
-          to send it directly. Use{" "}
-          <code
-            style={{
-              background: "var(--bg-hover)",
-              padding: "1px 5px",
-              borderRadius: 4,
-            }}
-          >
-            [Name]
-          </code>{" "}
-          as a placeholder for the customer's name.
-        </span>
+      {/* Control Bar */}
+      <div className="mb-12 relative group h-14">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
+        <input
+          className="form-input pl-14 h-full bg-white/[0.01] border-white/5 rounded-2xl"
+          placeholder="Search through saved communication templates..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      {/* Replies Grid */}
-      {replies.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div className="empty-state-icon">💬</div>
-            <h3>No quick replies yet</h3>
-            <p>Create your first template to save time when replying</p>
-            <button
-              className="btn btn-primary"
-              style={{ marginTop: 16 }}
-              onClick={() => setModal("add")}
-            >
-              <Plus size={16} /> Add Reply
-            </button>
-          </div>
+      {/* Content Grid */}
+      {filtered.length === 0 ? (
+        <div className="py-32 text-center card border-dashed">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-text-muted mx-auto mb-6">
+               <Zap size={32} />
+            </div>
+            <h3 className="text-lg font-black text-white mb-2">Empty Repository</h3>
+            <p className="text-text-secondary font-medium max-w-xs mx-auto">Standardize your responses to save hours of manual typing.</p>
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-            gap: 0,
-          }}
-        >
-          {replies.map((r) => (
-            <ReplyCard
-              key={r.id}
-              reply={r}
-              copied={copied}
-              onCopy={handleCopy}
-              onEdit={(r) => setModal({ edit: r })}
-              onDelete={(r) => setModal({ del: r })}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((r) => (
+            <div key={r.id} className="card group flex flex-col h-full bg-white/[0.01] hover:bg-white/[0.02]">
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <MessageSquare size={18} />
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button className="w-8 h-8 rounded-lg flex items-center justify-center text-text-muted hover:bg-white/5 hover:text-white" onClick={() => setModal({ edit: r })}>
+                      <Pencil size={14} />
+                   </button>
+                   <button className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/10" onClick={() => setModal({ del: r })}>
+                      <Trash2 size={14} />
+                   </button>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-black text-white mb-4 line-clamp-1 group-hover:text-primary transition-colors">{r.title}</h3>
+              
+              <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl p-5 mb-8 relative group/msg">
+                <p className="text-sm font-medium text-text-secondary leading-relaxed line-clamp-4 italic italic">
+                  "{r.content}"
+                </p>
+                <div className="absolute inset-0 bg-bg-surface/80 opacity-0 group-hover/msg:opacity-100 backdrop-blur-sm flex items-center justify-center transition-all rounded-2xl">
+                   <button 
+                     onClick={() => copyToClipboard(r.content)}
+                     className="btn btn-primary h-10 px-6 text-xs text-black font-black"
+                   >
+                     <Copy size={14} /> Copy Content
+                   </button>
+                </div>
+              </div>
+
+               <div className="flex items-center justify-between pt-4 border-t border-white/5 text-[0.6rem] font-black uppercase tracking-[0.2em] text-text-muted italic">
+                 <span>Template {r.id ? r.id.slice(0,4) : '####'}</span>
+                 <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">Ready to transmit</span>
+               </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Add Modal */}
+      {/* Modals Mapping */}
       {modal === "add" && (
-        <Modal title="New Quick Reply" onClose={() => setModal(null)}>
+        <Modal title="Create New Template" onClose={() => setModal(null)}>
           <ReplyForm
             onSave={(data) => {
               addReply(data);
@@ -291,9 +179,8 @@ export default function QuickReplies({ store }) {
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {modal?.edit && (
-        <Modal title="Edit Reply" onClose={() => setModal(null)}>
+        <Modal title="Modify Static Template" onClose={() => setModal(null)}>
           <ReplyForm
             initial={modal.edit}
             onSave={(data) => {
@@ -305,32 +192,19 @@ export default function QuickReplies({ store }) {
         </Modal>
       )}
 
-      {/* Delete Confirm */}
       {modal?.del && (
-        <Modal title="Delete Reply?" onClose={() => setModal(null)}>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-            Delete the reply{" "}
-            <strong style={{ color: "var(--text-primary)" }}>
-              {modal.del.title}
-            </strong>
-            ?
-          </p>
-          <div className="modal-footer">
-            <button
-              className="btn btn-secondary"
-              onClick={() => setModal(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-danger"
-              onClick={() => {
-                deleteReply(modal.del.id);
-                setModal(null);
-              }}
-            >
-              <Trash2 size={14} /> Delete
-            </button>
+        <Modal title="Purge Template?" onClose={() => setModal(null)}>
+          <div className="text-center p-4">
+             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+                <Trash2 size={32} />
+             </div>
+             <p className="text-base text-text-secondary font-medium leading-relaxed mb-8 px-6">
+               Are you certain you want to purge <strong className="text-white">{modal.del.title}</strong> from your knowledge base?
+             </p>
+             <div className="flex gap-3">
+               <button className="btn btn-secondary flex-1" onClick={() => setModal(null)}>Cancel</button>
+               <button className="btn btn-danger flex-1" onClick={() => { deleteReply(modal.del.id); setModal(null); }}>Purge Forever</button>
+             </div>
           </div>
         </Modal>
       )}

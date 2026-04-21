@@ -136,9 +136,9 @@ export default function LandingPage() {
                <Link to="/signup" className="btn btn-primary h-16 px-10 text-lg shadow-2xl group">
                   Start My Free Trial <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
                </Link>
-               <button className="btn btn-secondary h-16 px-10 text-lg group">
-                  <Play size={20} className="fill-current" /> Watch Demo
-               </button>
+                <a href="#demo" className="btn btn-secondary h-16 px-10 text-lg group">
+                   <Play size={20} className="fill-current" /> Watch Demo
+                </a>
             </div>
 
             {/* Trusted By */}

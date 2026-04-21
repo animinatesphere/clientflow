@@ -19,6 +19,7 @@ import Modal from "../components/ui/Modal";
 import Badge from "../components/ui/Badge";
 import UpgradeModal from "../components/ui/UpgradeModal";
 import { usePlan } from "../hooks/usePlan";
+import Logo from "../components/ui/Logo";
 
 const STATUS_CONFIG = {
   unpaid: { color: "var(--amber)", bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.2)", icon: Clock },
@@ -177,81 +178,176 @@ function InvoiceForm({
 function InvoicePreview({ invoice, customer, onMarkPaid, formatNaira }) {
   const handlePrint = () => window.print();
   const handleCopyLink = () => {
-    const text = `📄 *OFFICIAL INVOICE ${invoice.invoiceNumber}*\nFrom: *${invoice.businessName || "Service Provider"}*\nClient: *${customer?.name}*\nDate: ${new Date(invoice.createdAt).toLocaleDateString()}\nTotal Due: *₦${Number(invoice.total).toLocaleString()}*\n----------------------------------------\nGenerated via ClientFlow CRM`.trim();
+    const text = `📄 *OFFICIAL TAX INVOICE ${invoice.invoiceNumber}*\nFrom: *${invoice.businessName || "Service Provider"}*\nClient: *${customer?.name}*\nTotal: *${formatNaira(invoice.total)}*\n----------------------------------------\nGenerated via ClientFlow Business Suite`.trim();
     navigator.clipboard.writeText(text);
   };
 
+  const isPaid = invoice.status === 'paid';
+
   return (
     <div className="fadeInUp">
-      <div id="invoice-doc" className="bg-white text-black p-12 md:p-20 rounded-[2.5rem] shadow-3xl mb-8 relative overflow-hidden">
-        {/* Subtle Watermark */}
-        <div className="absolute top-10 right-10 opacity-[0.03] select-none pointer-events-none transform rotate-[-15deg]">
-          <Receipt size={300} />
-        </div>
-
-        <div className="flex justify-between items-start mb-16 relative z-10">
-          <div>
-            <h1 className="text-3xl font-black tracking-tighter mb-1 uppercase">{invoice.businessName || "MY BRAND"}</h1>
-            <p className="text-gray-400 text-[0.65rem] font-bold uppercase tracking-[0.2em]">Transaction Record</p>
+      <div id="invoice-doc" className="bg-white text-black p-10 md:p-14 lg:p-20 rounded-none shadow-3xl mb-8 relative overflow-hidden border border-gray-200">
+        {/* Enterprise Header */}
+        <div className="flex justify-between items-start mb-14">
+          <div className="flex items-center gap-4">
+             <Logo size={60} />
+             <div>
+                <h1 className="text-2xl font-black tracking-tighter uppercase leading-none mb-1">{invoice.businessName || "Registered Business"}</h1>
+                <p className="text-[0.65rem] font-bold text-gray-400 uppercase tracking-widest">{invoice.businessEmail || "Official Document #"+invoice.invoiceNumber}</p>
+             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-xl font-black text-primary leading-none mb-1">{invoice.invoiceNumber}</h2>
-            <p className="text-gray-400 text-[0.65rem] font-bold uppercase tracking-widest">{new Date(invoice.createdAt).toLocaleDateString()}</p>
+             <h2 className="text-4xl font-black text-gray-900 tracking-tighter mb-1">TAX INVOICE</h2>
+             <div className="inline-flex gap-2 items-center bg-gray-50 px-3 py-1 border border-gray-100 rounded">
+                <span className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest">Document ID</span>
+                <span className="text-xs font-black text-primary">{invoice.invoiceNumber}</span>
+             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-12 mb-16 relative z-10">
-          <div>
-            <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-4">Billed To Identity</p>
-            <p className="text-lg font-black">{customer?.name}</p>
-            <p className="text-sm font-medium text-gray-500 mt-1">{customer?.phone}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-4">Maturity Date</p>
-            <p className="text-lg font-black">{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'Immediate'}</p>
-          </div>
-        </div>
-
-        <table className="w-full mb-12 relative z-10">
-          <thead>
-            <tr className="border-b-2 border-black">
-              <th className="bg-transparent border-none text-left p-4 text-[0.65rem] text-gray-400 font-black">DESCRIPTION</th>
-              <th className="bg-transparent border-none text-center p-4 text-[0.65rem] text-gray-400 font-black">QTY</th>
-              <th className="bg-transparent border-none text-right p-4 text-[0.65rem] text-gray-400 font-black">UNIT</th>
-              <th className="bg-transparent border-none text-right p-4 text-[0.65rem] text-gray-400 font-black">TOTAL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.items.map((item, i) => (
-              <tr key={i} className="border-b border-gray-100 italic">
-                <td className="p-4 font-bold text-sm text-gray-800">{item.description}</td>
-                <td className="p-4 text-center font-bold text-sm text-gray-500">{item.qty}</td>
-                <td className="p-4 text-right font-bold text-sm text-gray-800">₦{Number(item.price).toLocaleString()}</td>
-                <td className="p-4 text-right font-black text-sm text-black">₦{(Number(item.qty) * Number(item.price)).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className="ml-auto max-w-[300px] relative z-10">
-           <div className="flex justify-between items-center mb-2 font-bold text-sm text-gray-500">
-             <span>Gross Sum</span>
-             <span>₦{Number(invoice.subtotal).toLocaleString()}</span>
+        {/* Global Metadata Bar */}
+        <div className="grid grid-cols-3 gap-0 border-y border-gray-900 mb-14">
+           <div className="p-4 border-r border-gray-100">
+              <p className="text-[0.6rem] font-black text-gray-400 uppercase tracking-widest mb-1">Issue Date</p>
+              <p className="text-sm font-black">{new Date(invoice.createdAt).toLocaleDateString()}</p>
            </div>
-           {invoice.discount > 0 && <div className="flex justify-between items-center mb-2 font-black text-sm text-red-500"><span>Client Discount</span><span>-₦{((invoice.subtotal * invoice.discount)/100).toLocaleString()}</span></div>}
-           <div className="h-px bg-black my-4" />
-           <div className="flex justify-between items-center">
-             <span className="font-black text-lg">FINAL DUE</span>
-             <span className="font-black text-2xl text-primary tracking-tighter">₦{Number(invoice.total).toLocaleString()}</span>
+           <div className="p-4 border-r border-gray-100">
+              <p className="text-[0.6rem] font-black text-gray-400 uppercase tracking-widest mb-1">Due Date</p>
+              <p className="text-sm font-black">{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'Immediate'}</p>
+           </div>
+           <div className="p-4 bg-gray-50/50">
+              <p className="text-[0.6rem] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
+              <p className={`text-sm font-black uppercase ${isPaid ? 'text-green-600' : 'text-amber-600'}`}>{invoice.status}</p>
            </div>
         </div>
+
+        {/* Parties Section */}
+        <div className="grid grid-cols-2 gap-20 mb-14">
+           <div>
+              <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-4">Issuer Particulars</p>
+              <h3 className="text-lg font-black text-gray-900 mb-1">{invoice.businessName || "Primary Provider"}</h3>
+              <p className="text-sm font-medium text-gray-500">{invoice.businessPhone || "Contact detail pending"}</p>
+              <p className="text-sm font-medium text-gray-500">{invoice.businessEmail || "billing@clientflow.io"}</p>
+           </div>
+           <div>
+              <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-4">Recipient Identity</p>
+              <h3 className="text-lg font-black text-gray-900 mb-1">{customer?.name || "Client Name"}</h3>
+              <p className="text-sm font-medium text-gray-500">{customer?.phone}</p>
+              <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                 <p className="text-[0.6rem] font-black text-primary uppercase tracking-[0.2em]">Billed To</p>
+              </div>
+           </div>
+        </div>
+
+        {/* Items Table */}
+        <div className="mb-14 overflow-x-auto">
+           <table className="w-full border-collapse">
+              <thead>
+                 <tr className="bg-gray-900 text-white">
+                    <th className="text-left p-4 text-[0.65rem] font-black uppercase tracking-widest">Service Description</th>
+                    <th className="text-center p-4 text-[0.65rem] font-black uppercase tracking-widest w-24">Qty</th>
+                    <th className="text-right p-4 text-[0.65rem] font-black uppercase tracking-widest w-32">Unit Rate</th>
+                    <th className="text-right p-4 text-[0.65rem] font-black uppercase tracking-widest w-32">Amount</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 border-x border-b border-gray-100">
+                 {invoice.items.map((item, i) => (
+                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}>
+                       <td className="p-4 font-bold text-sm text-gray-800">{item.description}</td>
+                       <td className="p-4 text-center font-bold text-sm text-gray-500">{item.qty}</td>
+                       <td className="p-4 text-right font-mono text-sm text-gray-800 font-bold">{formatNaira(item.price)}</td>
+                       <td className="p-4 text-right font-mono text-sm text-black font-black">{formatNaira(Number(item.qty) * Number(item.price))}</td>
+                    </tr>
+                 ))}
+                 {/* Empty rows to fill space */}
+                 {[...Array(Math.max(0, 3 - invoice.items.length))].map((_, i) => (
+                    <tr key={`empty-${i}`} className="h-12"><td colSpan="4"></td></tr>
+                 ))}
+              </tbody>
+           </table>
+        </div>
+
+        {/* Totals & Terms */}
+        <div className="grid grid-cols-2 gap-20 mb-14">
+           <div className="space-y-6">
+              <div>
+                 <p className="text-[0.6rem] font-black text-gray-400 uppercase tracking-widest mb-4">Settlement Details</p>
+                 <div className="p-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/50">
+                    <div className="grid grid-cols-2 gap-y-2 text-[0.65rem]">
+                       <span className="font-bold text-gray-400 uppercase">Bank:</span>
+                       <span className="font-black text-gray-900">PROCEEDING BANK PLC</span>
+                       <span className="font-bold text-gray-400 uppercase">Account:</span>
+                       <span className="font-black text-gray-900">0123456789</span>
+                       <span className="font-bold text-gray-400 uppercase">Name:</span>
+                       <span className="font-black text-gray-900">{invoice.businessName || "Studio Ade"}</span>
+                    </div>
+                 </div>
+              </div>
+              <p className="text-[0.65rem] text-gray-400 font-medium italic leading-relaxed">
+                 Notes: Please include Invoice ID as reference for bank transfers. All payments should be made strictly to the account details provided above.
+              </p>
+           </div>
+           <div>
+              <div className="space-y-3">
+                 <div className="flex justify-between items-center text-sm font-bold text-gray-500">
+                    <span>Valuation Subtotal</span>
+                    <span className="font-mono">{formatNaira(invoice.subtotal)}</span>
+                 </div>
+                 {invoice.discount > 0 && (
+                    <div className="flex justify-between items-center text-sm font-black text-red-500">
+                       <span>Corporate Discount ({invoice.discount}%)</span>
+                       <span className="font-mono">-{formatNaira((invoice.subtotal * invoice.discount)/100)}</span>
+                    </div>
+                 )}
+                 <div className="h-px bg-gray-100 my-2" />
+                 <div className="bg-gray-900 text-white p-6 rounded-xl flex justify-between items-center">
+                    <div>
+                       <span className="block text-[0.6rem] font-black text-white/50 uppercase tracking-widest mb-1">Total Amount Due</span>
+                       <span className="text-3xl font-black tracking-tighter">{formatNaira(invoice.total)}</span>
+                    </div>
+                    <Receipt size={32} className="opacity-20 translate-x-2" />
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* Signatures */}
+        <div className="flex justify-between items-end mt-20 pt-10 border-t border-gray-100">
+           <div>
+              <p className="text-[0.6rem] font-black text-gray-300 uppercase tracking-widest mb-1">Generated Via</p>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-tight">ClientFlow Business Suite v2.4</p>
+           </div>
+           <div className="text-right">
+              <div className="w-48 border-b-2 border-gray-900 mb-2" />
+              <p className="text-[0.6rem] font-black text-gray-900 uppercase tracking-widest">Authorized Signatory</p>
+           </div>
+        </div>
+
+        {/* RUBBER STAMP PAID */}
+        {isPaid && (
+          <div className="absolute top-[60%] right-[10%] rotate-[-25deg] pointer-events-none select-none">
+             <div className="border-[6px] border-green-600 px-10 py-4 rounded-2xl flex flex-col items-center justify-center opacity-70">
+                <p className="text-6xl font-black text-green-600 tracking-tighter uppercase mb-1">PAID</p>
+                <p className="text-[0.6rem] font-black text-green-600 uppercase tracking-[0.4em] leading-none">Verified Record</p>
+             </div>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <button className="btn btn-secondary h-14" onClick={handleCopyLink}>Copy Lead Link</button>
-        <button className="btn btn-secondary h-14" onClick={handlePrint}>Download as PDF</button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <button className="btn btn-secondary h-14 group" onClick={handleCopyLink}>
+           <Copy size={18} className="group-hover:scale-110 transition-transform" />
+           Copy Transmission Link
+        </button>
+        <button className="btn btn-secondary h-14 group" onClick={handlePrint}>
+           <Download size={18} className="group-hover:scale-110 transition-transform" />
+           Export PDF Document
+        </button>
         {invoice.status === 'unpaid' && (
-           <button className="btn btn-primary h-14" onClick={() => onMarkPaid(invoice.id)}>Confirm Collection</button>
+           <button className="btn btn-primary h-14" onClick={() => onMarkPaid(invoice.id)}>
+              <CheckCircle size={18} />
+              Confirm Collection
+           </button>
         )}
       </div>
     </div>
@@ -379,7 +475,7 @@ export default function Invoices({ store }) {
       )}
 
       {modal?.view && (
-        <Modal title={modal.view.invoiceNumber} onClose={() => setModal(null)}>
+        <Modal title={modal.view.invoiceNumber} onClose={() => setModal(null)} maxWidth="max-w-4xl">
           <InvoicePreview invoice={modal.view} customer={getCustomer(modal.view.customerId)} onMarkPaid={handleMarkPaid} formatNaira={formatNaira} />
         </Modal>
       )}

@@ -50,6 +50,7 @@ function AuthRoute({ children }) {
 function AppLayout({ children }) {
   const store = useStore();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebar] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 

@@ -143,3 +143,54 @@
 .avatar {
   @apply flex items-center justify-center rounded-full font-black overflow-hidden bg-bg-surface border border-border text-primary;
 }
+
+/* Expert PDF/Print Styling */
+@media print {
+  /* Reset background and colors for pure white paper */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide UI Chrome - Focus ONLY on the document */
+  nav, aside, header, footer, button, .btn, .no-print, [role="alert"], #sidebar-toggle {
+    display: none !important;
+  }
+
+  /* Force main content to take full width */
+  main, .flex-1, .app-shell, .lg\3apl-72 {
+    padding: 0 !important;
+    margin: 0 !important;
+    left: 0 !important;
+  }
+
+  /* Center the invoice document */
+  #invoice-doc {
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    background: white !important;
+  }
+
+  /* Ensure colors and "PAID" stamp print clearly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Refined Document Spacing for A4 */
+  @page {
+    margin: 1cm;
+    size: A4 portrait;
+  }
+
+  /* Fix for text colors on print (some printers default to grayscale) */
+  .text-primary { color: #25D366 !important; }
+  .text-gray-400 { color: #9ca3af !important; }
+  .text-gray-800 { color: #1f2937 !important; }
+  .bg-primary { background-color: #25D366 !important; }
+}

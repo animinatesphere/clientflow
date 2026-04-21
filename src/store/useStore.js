@@ -892,7 +892,7 @@ export function useStore() {
       customers: 20,
       orders: 50,
       replies: 5,
-      invoices: 3,
+      invoices: 0,
       broadcast: false,
     },
     pro: {

@@ -12,6 +12,7 @@ import {
   Receipt,
   Headphones,
 } from "lucide-react";
+import Logo from "../ui/Logo";
 
 const NAV = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -36,8 +37,8 @@ export default function Sidebar({ isOpen, onClose, user, onLogout }) {
       <aside className={`fixed inset-y-0 left-0 w-72 bg-bg-primary border-r border-white/5 z-[100] transform transition-transform duration-500 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0 shadow-[20px_0_60px_rgba(0,0,0,0.5)]" : "-translate-x-full"}`}>
         {/* Logo Section */}
         <Link to="/" className="h-20 px-8 flex items-center gap-3" onClick={onClose}>
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(37,211,102,0.2)]">
-            <MessageCircle size={18} color="#000" fill="#000" />
+          <div className="w-8 h-8 flex items-center justify-center shadow-[0_0_20px_rgba(37,211,102,0.2)]">
+            <Logo size={32} />
           </div>
           <span className="text-xl font-black tracking-tighter text-white">Client<span className="text-primary">Flow</span></span>
         </Link>
@@ -96,7 +97,7 @@ export default function Sidebar({ isOpen, onClose, user, onLogout }) {
              </div>
              <div className="flex-1 min-w-0 pr-2">
                <div className="text-sm font-black text-white truncate">{user?.name || "Entrepreneur"}</div>
-               <div className="text-[0.7rem] font-bold text-primary uppercase tracking-widest">Growth Pro</div>
+               <div className="text-[0.7rem] font-bold text-primary uppercase tracking-widest">{user?.role === 'pro' ? 'Growth Pro' : 'Free Starter'}</div>
              </div>
              <button 
                onClick={onLogout}

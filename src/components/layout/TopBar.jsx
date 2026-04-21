@@ -10,7 +10,7 @@ const PAGE_TITLES = {
   'invoices':      'Billing',
 };
 
-export default function TopBar({ page, onMenuClick }) {
+export default function TopBar({ page, onMenuClick, user }) {
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -30,7 +30,9 @@ export default function TopBar({ page, onMenuClick }) {
         <div>
           <h1 className="text-lg sm:text-xl font-black text-white tracking-tight">{PAGE_TITLES[page]}</h1>
           {page === 'dashboard' && (
-            <p className="text-[0.6rem] sm:text-[0.7rem] font-bold text-text-secondary uppercase tracking-[0.1em]">{greeting().split(' ')[1]}, back</p>
+            <p className="text-[0.6rem] sm:text-[0.7rem] font-bold text-text-secondary uppercase tracking-[0.1em]">
+              {greeting().split(' ')[1]}, {user?.name ? user.name.split(' ')[0] : 'Legend'}
+            </p>
           )}
         </div>
       </div>
@@ -60,15 +62,15 @@ export default function TopBar({ page, onMenuClick }) {
            
            <div className="h-6 w-px bg-white/10 mx-2 hidden sm:block" />
 
-           <button className="flex items-center gap-3 p-1 pr-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all text-left">
-              <div className="avatar w-8 h-8 rounded-lg text-xs border-transparent bg-primary text-black">
-                CF
-              </div>
-              <div className="hidden sm:block">
-                 <div className="text-xs font-black text-white">Elite Org</div>
-                 <div className="text-[0.65rem] font-bold text-text-muted">Pro Account</div>
-              </div>
-           </button>
+            <button className="flex items-center gap-3 p-1 pr-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all text-left">
+               <div className="avatar w-8 h-8 rounded-lg text-xs border-transparent bg-primary text-black font-black flex items-center justify-center">
+                 {user?.name ? user.name.charAt(0) : 'U'}
+               </div>
+               <div className="hidden sm:block">
+                  <div className="text-xs font-black text-white">{user?.name || 'Client Org'}</div>
+                  <div className="text-[0.65rem] font-bold text-text-muted uppercase tracking-widest">{user?.role === 'pro' ? 'Pro Member' : 'Standard'}</div>
+               </div>
+            </button>
         </div>
       </div>
     </header>

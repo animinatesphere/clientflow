@@ -95,7 +95,7 @@ function AppLayout({ children }) {
       />
 
       <div className="flex-1 lg:pl-72 transition-all duration-500">
-        <TopBar page={path} onMenuClick={() => setSidebar((s) => !s)} />
+        <TopBar page={path} onMenuClick={() => setSidebar((s) => !s)} user={store.user} />
         <main className="relative z-0">
           {children}
         </main>

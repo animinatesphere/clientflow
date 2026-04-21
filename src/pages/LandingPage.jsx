@@ -13,6 +13,7 @@ import {
   Star as StarIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import Logo from "../components/ui/Logo";
 
 function FeatureCard({ icon: Icon, title, description, delay = 0 }) {
   return (
@@ -91,8 +92,8 @@ export default function LandingPage() {
       <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'py-4 bg-bg-primary/80 backdrop-blur-xl border-b border-white/5' : 'py-8'}`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex justify-between items-center">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(37,211,102,0.4)]">
-                <MessageCircle size={22} color="#000" fill="#000" />
+             <div className="w-10 h-10 shadow-[0_0_30px_rgba(37,211,102,0.4)] flex items-center justify-center">
+                <Logo size={40} />
              </div>
              <span className="text-xl font-black tracking-tighter text-white">Client<span className="text-primary">Flow</span></span>
           </div>

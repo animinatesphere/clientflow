@@ -11,6 +11,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Logo from "../components/ui/Logo";
 
 export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
   const [isLogin, setIsLogin] = useState(initialMode === "login");
@@ -77,8 +78,8 @@ export default function Auth({ onLogin, onSignup, initialMode = "login" }) {
       <div className="w-full max-w-md relative z-10 fadeInUp">
         {/* Branding */}
         <div className="text-center mb-10 group cursor-pointer" onClick={() => navigate("/")}>
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_40px_rgba(37,211,102,0.3)] mx-auto mb-6 transform group-hover:scale-110 transition-transform duration-500">
-            <MessageCircle size={28} color="#000" fill="#000" />
+          <div className="w-14 h-14 flex items-center justify-center shadow-[0_0_40px_rgba(37,211,102,0.3)] mx-auto mb-6 transform group-hover:scale-110 transition-transform duration-500">
+            <Logo size={56} />
           </div>
           <h1 className="text-2xl font-black text-white tracking-tighter">Client<span className="text-primary">Flow</span></h1>
           <p className="text-[0.65rem] font-bold text-text-muted uppercase tracking-[0.2em] mt-2">Enterprise Engagement Suite</p>
